@@ -420,8 +420,7 @@ function SplashScreen() {
     <div style={{ flex:1, minHeight:0, background:"linear-gradient(160deg,#A8D800,#D4F06E,#C8E85A)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:16 }}>
       <div style={{ fontSize:80, animation:"sprout 1.2s ease forwards" }}>🌿</div>
       <div style={{ textAlign:"center", animation:"fadeIn 0.8s ease 0.8s both" }}>
-        <div style={{ color:"#2D5000", fontSize:13, letterSpacing:6, fontWeight:500, marginBottom:8 }}>REST IN</div>
-        <div style={{ color:"#2D5000", fontSize:36, fontWeight:900, letterSpacing:-1 }}>PLANT</div>
+        <div style={{ color:"#2D5000", fontSize:36, fontWeight:900, letterSpacing:2 }}>PLANTUS</div>
       </div>
       <div style={{ color:"rgba(45,80,0,0.5)", fontSize:13, marginTop:8, animation:"fadeIn 0.8s ease 1.2s both" }}>나의 초록 친구들을 관리해요</div>
     </div>
@@ -687,7 +686,7 @@ function HomeScreen({plants,notifs,waterLog,plantPhotos,onPlant,onNotif,onWater,
           <div style={{flex:1,zIndex:1}}>
             <div style={{fontSize:18,fontWeight:800,color:"#1A2E00",lineHeight:1.35,marginBottom:8}}>나와 딱 맞는<br/>식물을 찾아보세요!</div>
             <div style={{fontSize:12,color:"#5A7000",lineHeight:1.6,marginBottom:16}}>성격, 라이프스타일 기반으로<br/>내 식물 유형을 알아봐요</div>
-            <button className="bp" style={{background:"#fff",border:"none",borderRadius:20,padding:"8px 18px",fontSize:13,fontWeight:700,color:"#1A2E00",cursor:"pointer",fontFamily:"inherit"}}>테스트 시작하기</button>
+            <button className="bp" onClick={()=>window.open("https://jihyunlucia.github.io/rest-in-plants/","_blank")} style={{background:"#fff",border:"none",borderRadius:20,padding:"8px 18px",fontSize:13,fontWeight:700,color:"#1A2E00",cursor:"pointer",fontFamily:"inherit"}}>테스트 시작하기</button>
           </div>
           <div style={{position:"absolute",right:-10,bottom:-10,fontSize:110,lineHeight:1,opacity:0.85,transform:"rotate(-10deg)",userSelect:"none"}}>🌴</div>
         </div>
@@ -1112,9 +1111,9 @@ function AddPlantScreen({step,setStep,onDone,onBack}){
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
                       {filtered.map((p,i)=>(
                         <button key={p.name} onClick={()=>{setSelDb(p);setWaterDays(p.water);}} className="bp" style={{background:selDb?.name===p.name?"#4A7C00":"#fff",color:selDb?.name===p.name?"#fff":"#2D5000",border:"2px solid",borderColor:selDb?.name===p.name?"#4A7C00":"#E8F4EA",borderRadius:16,padding:"12px 6px",cursor:"pointer",fontFamily:"inherit",textAlign:"center",animation:"fadeIn 0.2s ease "+Math.min(i,10)*0.03+"s both",transition:"all 0.15s"}}>
-                          <div style={{fontSize:28,marginBottom:4}}>{p.emoji}</div>
-                          <div style={{fontSize:11,fontWeight:700,lineHeight:1.3}}>{p.name}</div>
-                          <div style={{fontSize:9,marginTop:4,opacity:0.7}}>{p.light}</div>
+                          <div style={{fontSize:28,marginBottom:4,textAlign:"center"}}>{p.emoji}</div>
+                          <div style={{fontSize:11,fontWeight:700,lineHeight:1.3,textAlign:"center"}}>{p.name}</div>
+                          <div style={{fontSize:9,marginTop:4,opacity:0.7,textAlign:"center"}}>{p.light}</div>
                         </button>
                       ))}
                     </div>
@@ -1830,7 +1829,7 @@ function MyPageScreen({members,FC,IL,waterLog,plants,myAvatar,onAvatarChange,myN
                   placeholder="닉네임 입력"
                   maxLength={12}
                   autoFocus
-                  style={{background:"rgba(255,255,255,0.15)",border:"1.5px solid rgba(255,255,255,0.4)",borderRadius:10,padding:"5px 10px",fontSize:13,color:"#fff",fontFamily:"inherit",outline:"none",width:130}}
+                  style={{background:"#fff",border:"1.5px solid #C8E85A",borderRadius:10,padding:"5px 10px",fontSize:13,color:"#1A2E00",fontFamily:"inherit",outline:"none",width:130}}
                 />
                 <button onClick={()=>{onNicknameChange(nickDraft.trim());setEditingNick(false);}} style={{background:"#D4F06E",border:"none",color:"#2D5000",borderRadius:8,padding:"5px 10px",color:"#2D5000",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>저장</button>
                 <button onClick={()=>setEditingNick(false)} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:8,padding:"5px 8px",color:"#5A7A00",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>취소</button>
@@ -1838,9 +1837,9 @@ function MyPageScreen({members,FC,IL,waterLog,plants,myAvatar,onAvatarChange,myN
             ) : (
               <div style={{display:"flex",alignItems:"center",gap:6,marginTop:8}}>
                 {myNickname ? (
-                  <span style={{background:"rgba(255,255,255,0.15)",color:"#EEF7B0",borderRadius:20,padding:"3px 12px",fontSize:12,fontWeight:700}}>@{myNickname}</span>
+                  <span style={{background:"rgba(255,255,255,0.2)",color:"#1A2E00",borderRadius:20,padding:"3px 12px",fontSize:12,fontWeight:700}}>@{myNickname}</span>
                 ) : (
-                  <span style={{color:"rgba(255,255,255,0.45)",fontSize:12}}>커뮤니티 닉네임 없음</span>
+                  <span style={{color:"#5A7A00",fontSize:12}}>커뮤니티 닉네임 없음</span>
                 )}
                 <button onClick={()=>{setNickDraft(myNickname);setEditingNick(true);}} style={{background:"none",border:"none",color:"#7A9A3A",fontSize:13,cursor:"pointer",padding:0}}><Mi name="edit" size={16} color="rgba(255,255,255,0.5)" /></button>
               </div>
@@ -1888,12 +1887,12 @@ function MyPageScreen({members,FC,IL,waterLog,plants,myAvatar,onAvatarChange,myN
         <div style={{background:"linear-gradient(135deg,#C8E85A,#D4F06E)",borderRadius:24,padding:22,marginBottom:16}}>
           <div style={{color:"#1A2E00",fontSize:13,fontWeight:800,marginBottom:6}}>🔗 가족 초대하기</div>
           <div style={{color:"#2D5000",fontSize:13,marginBottom:18,lineHeight:1.5}}>코드 또는 링크를 공유하면 같은 정원에서 함께 관리해요</div>
-          <div style={{background:"rgba(255,255,255,0.85)",borderRadius:16,padding:"16px 18px",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{background:"rgba(255,255,255,0.85)",borderRadius:16,padding:"12px 16px",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
             <div>
               <div style={{color:"#5A7A00",fontSize:10,marginBottom:4}}>초대 코드</div>
-              <div style={{color:"#2D5000",fontSize:24,fontWeight:900,letterSpacing:4}}>{FC}</div>
+              <div style={{color:"#1A2E00",fontSize:18,fontWeight:900,letterSpacing:3}}>{FC}</div>
             </div>
-            <button onClick={()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);}} className="bp" style={{background:copied?"#4A7C00":"#1A2E00",border:"none",borderRadius:10,padding:"8px 16px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"background 0.3s"}}>
+            <button onClick={()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);}} className="bp" style={{background:copied?"#4A7C00":"#1A2E00",border:"none",borderRadius:10,padding:"7px 12px",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"background 0.3s",flexShrink:0}}>
               {copied?"✓ 복사됨":"복사"}
             </button>
           </div>
@@ -2406,7 +2405,6 @@ function BottomNav({active,onNav,cartCount}){
     </div>
   );
 }
-
     // 앱 마운트
     const container = document.getElementById("root");
     const root = ReactDOM.createRoot(container);

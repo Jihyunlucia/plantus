@@ -347,6 +347,2416 @@ function App() {
     touchStartX.current = null;
   };
 
+  const isFullScreen = screen === S.SPLASH || screen === S.ONBOARDING;
+
+  return (
+    <div style={{ width:"100%", height:"100%", background:"#F5F9E8", fontFamily:"'Pretendard','Noto Sans KR','Apple SD Gothic Neo',sans-serif" }}>
+      <style>{`
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+        .mi{font-family:'Material Symbols Rounded';font-style:normal;font-weight:normal;display:inline-flex;align-items:center;justify-content:center;line-height:1;letter-spacing:normal;text-transform:none;white-space:nowrap;word-wrap:normal;direction:ltr;-webkit-font-smoothing:antialiased;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24}
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body,#root{width:100%;height:100%;overflow:hidden}
+        ::-webkit-scrollbar{width:0}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes sprout{0%{transform:scale(0.5) rotate(-10deg);opacity:0}60%{transform:scale(1.1) rotate(3deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+        @keyframes modalIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        @keyframes overlayIn{from{opacity:0}to{opacity:1}}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+        .bp:active{transform:scale(0.95);opacity:0.85}
+        .ch:active{transform:scale(0.97)}
+      `}</style>
+
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        style={{ width:"100%", height:"100%", background:"#F5F9E8", overflow:"hidden", position:"relative" }}>
+
+        {/* 스플래시 / 온보딩 — 전체 화면 */}
+        {screen===S.SPLASH && <SplashScreen />}
+        {screen===S.ONBOARDING && <OnboardingScreen step={obStep} setStep={setObStep} onDone={()=>go(S.HOME)} />}
+
+        {/* 일반 화면 — BottomNav 위 영역 */}
+        {!isFullScreen && (
+          <div style={{ position:"absolute", top:0, left:0, right:0, bottom:72, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+            {screen===S.HOME && <HomeScreen plants={myPlants} notifs={NOTIFS} waterLog={waterLog} plantPhotos={plantPhotos} onPlant={p=>go(S.PLANT_DETAIL,p)} onNotif={()=>go(S.NOTIFICATIONS)} onWater={(notifId,plantId)=>{setDoneUrgent(prev=>new Set([...prev,notifId]));setWaterModal(plantId);}} doneUrgent={doneUrgent} onAllPlants={()=>go(S.MY_PLANTS)} onContent={()=>go(S.CONTENT_FEED)} savedPosts={savedPosts} onToggleSave={id=>setSavedPosts(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id])} />}
+            {screen===S.MY_PLANTS && <MyPlantsScreen plants={myPlants} plantPhotos={plantPhotos} onPlant={p=>go(S.PLANT_DETAIL,p)} onAdd={()=>{setAddStep(0);go(S.ADD_PLANT);}} onBack={goBack} />}
+            {screen===S.PLANT_DETAIL && selPlant && <PlantDetailScreen plant={selPlant} waterLog={waterLog} plantPhotos={plantPhotos} onSetPhoto={(id,dataUrl)=>setPlantPhotos(prev=>({...prev,[id]:[...(prev[id]||[]),{id:Date.now(),dataUrl}]}))} onWater={()=>setWaterModal(selPlant.id)} onBack={goBack} />}
+            {screen===S.ADD_PLANT && <AddPlantScreen step={addStep} setStep={setAddStep} onDone={(plant)=>{setMyPlants(prev=>[...prev,{...plant,id:Date.now()}]);go(S.MY_PLANTS);}} onBack={goBack} />}
+            {screen===S.CALENDAR && <CalendarDiaryScreen plants={myPlants} diaries={diaries} waterLog={waterLog} onWriteDiary={(date)=>{setDiaryModal(date);}} onBack={goBack} />}
+            {screen===S.DIARY_WRITE && <DiaryWriteScreen plants={myPlants} prefillDate={diaryModal} onBack={goBack} onSave={(entry)=>{setDiaries(prev=>[entry,...prev]);goBack();}} />}
+            {screen===S.SHOP && <ShopScreen items={SHOP_ITEMS} cartCount={cartCount} onAdd={()=>setCartCount(c=>c+1)} onBack={goBack} />}
+            {screen===S.NOTIFICATIONS && <NotificationsScreen items={NOTIFS} onBack={goBack} />}
+            {screen===S.CONTENT_FEED && <ContentFeedScreen onBack={goBack} savedPosts={savedPosts} onToggleSave={id=>setSavedPosts(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id])} onPost={post=>{setSelPost(post);go(S.CONTENT_DETAIL);}} />}
+            {screen===S.CONTENT_DETAIL && selPost && <ContentDetailScreen post={selPost} onBack={goBack} savedPosts={savedPosts} onToggleSave={id=>setSavedPosts(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id])} />}
+            {screen===S.COMMUNITY && <CommunityScreen plants={myPlants} plantPhotos={plantPhotos} myAvatar={myAvatar} myNickname={myNickname} onNicknameChange={setMyNickname} onBack={goBack} />}
+            {screen===S.MYPAGE && <MyPageScreen members={familyMembers} FC={FC} IL={IL} waterLog={waterLog} plants={myPlants} myAvatar={myAvatar} onAvatarChange={setMyAvatar} myNickname={myNickname} onNicknameChange={setMyNickname} onFamily={()=>go(S.FAMILY)} onJoin={()=>go(S.JOIN_FAMILY)} onBack={goBack} />}
+            {screen===S.FAMILY && <FamilyScreen members={familyMembers} onRemoveMember={id=>setFamilyMembers(prev=>prev.filter(m=>m.id!==id))} FC={FC} IL={IL} waterLog={waterLog} plants={myPlants} onJoin={()=>go(S.JOIN_FAMILY)} onBack={goBack} />}
+            {screen===S.JOIN_FAMILY && <JoinFamilyScreen onJoin={()=>go(S.MYPAGE)} onBack={goBack} />}
+          </div>
+        )}
+
+        {/* 하단 네비 — position:fixed 항상 화면 하단 고정 */}
+        {!isFullScreen && (
+          <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100}}>
+            <BottomNav active={tab} onNav={nav} cartCount={cartCount} />
+          </div>
+        )}
+
+        {waterModal && <WaterModal plantId={waterModal} plants={myPlants} members={familyMembers} onClose={()=>setWaterModal(null)} onSave={log=>{
+          setWaterLog(prev=>[log,...prev]);
+          if(log.action==="물주기"){
+            setMyPlants(prev=>prev.map(p=>p.id!==log.plantId ? p : {
+              ...p,
+              lastWatered:0,
+              nextWater:p.water,
+              moisture:calcMoisture(0,p.water),
+              alerts:p.alerts.filter(a=>!a.includes("물주기"))
+            }));
+          }
+          setWaterModal(null);
+        }} />}
+      </div>
+    </div>
+  )
+}
+
+// ─── SPLASH ───────────────────────────────────────────────────────────────────
+function SplashScreen() {
+  return (
+    <div style={{ width:"100%", height:"100%", background:"linear-gradient(160deg,#A8D800,#D4F06E,#C8E85A)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:16 }}>
+      <div style={{ fontSize:80, animation:"sprout 1.2s ease forwards" }}>🌿</div>
+      <div style={{ textAlign:"center", animation:"fadeIn 0.8s ease 0.8s both" }}>
+        <div style={{ color:"#2D5000", fontSize:36, fontWeight:900, letterSpacing:2 }}>PLANTUS</div>
+      </div>
+      <div style={{ color:"rgba(45,80,0,0.5)", fontSize:13, marginTop:8, animation:"fadeIn 0.8s ease 1.2s both" }}>나의 초록 친구들을 관리해요</div>
+    </div>
+  );
+}
+
+// ─── MATERIAL ICON HELPER ────────────────────────────────────────────────────
+const Mi = ({name, size=20, color="inherit", style={}}) => (
+  <span className="mi" style={{fontSize:size, color, lineHeight:1, userSelect:"none", ...style}}>{name}</span>
+);
+
+// ─── SCREEN HEADER (공통 헤더 — 뒤로가기 포함) ──────────────────────────────
+function ScreenHeader({label, sub, onBack, right, bg, dark}){
+  const bgColor = bg || "#F5F9E8";
+  const DARK_BGS=["#2D5000","#1A2E00","#4A7C00","#3D7A00","#2D6A4F","#1B4332"];
+  const isDark=!!dark||DARK_BGS.indexOf(bgColor)>=0;
+  const textPrimary=isDark?"#fff":"#1A2E00";
+  const textSub=isDark?"rgba(255,255,255,0.7)":"#7A9A3A";
+  const backColor=isDark?"rgba(255,255,255,0.85)":"#5A7A00";
+  const borderC=isDark?"transparent":"#E8F2B0";
+  return(
+    <div style={{background:bgColor,padding:"16px 20px 20px",flexShrink:0,borderBottom:"1px solid "+borderC}}>
+      {onBack&&(<button onClick={onBack} className="bp" style={{background:"none",border:"none",color:backColor,fontSize:13,cursor:"pointer",lineHeight:1,padding:"0",marginBottom:16,display:"flex",alignItems:"center"}}><Mi name="arrow_back_ios_new" size={22} color={backColor} /></button>)}
+      <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between"}}>
+        <div>
+          {sub&&<div style={{color:textSub,fontSize:11,fontWeight:700,letterSpacing:1.5,marginBottom:6}}>{sub}</div>}
+          <div style={{color:textPrimary,fontSize:24,fontWeight:800,lineHeight:1.15}}>{label}</div>
+        </div>
+        {right}
+      </div>
+    </div>
+  );
+}
+
+
+const OB=[{emoji:"🌱",title:"나만의 식물원\n만들기",sub:"75종 식물 DB로 쉽게 등록하고\n성장 기록을 남겨보세요",color:"#8DB800"},{emoji:"💧",title:"스마트 알림으로\n절대 잊지 않게",sub:"물주기·분갈이·흙 점검까지\n딱 맞는 시기에 알려드려요",color:"#6AAF00"},{emoji:"👨‍👩‍👧",title:"가족과 함께\n식물을 키워요",sub:"초대 코드로 가족을 초대하고\n누가 물 줬는지 함께 기록해요",color:"#6AAF00"}];
+function OnboardingScreen({step,setStep,onDone}){
+  const s=OB[step];
+  const obBg="linear-gradient(160deg,"+s.color+",#D4F06E)";
+  return(
+    <div style={{width:"100%",height:"100%",background:obBg,display:"flex",flexDirection:"column",padding:"60px 32px 48px",animation:"fadeIn 0.4s ease"}}>
+      <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:32}}>
+        <div style={{fontSize:96}}>{s.emoji}</div>
+        <div style={{textAlign:"center"}}>
+          <div style={{color:"#1A2E00",fontSize:28,fontWeight:800,lineHeight:1.3,whiteSpace:"pre-line",marginBottom:16}}>{s.title}</div>
+          <div style={{color:"rgba(26,46,0,0.7)",fontSize:15,lineHeight:1.7,whiteSpace:"pre-line"}}>{s.sub}</div>
+        </div>
+      </div>
+      <div style={{display:"flex",gap:6,justifyContent:"center",marginBottom:32}}>
+        {OB.map((_,i)=><div key={i} style={{width:i===step?24:8,height:8,borderRadius:4,background:i===step?"#1A2E00":"rgba(0,0,0,0.2)",transition:"all 0.3s"}}/>)}
+      </div>
+      <button className="bp" onClick={()=>step<2?setStep(step+1):onDone()} style={{background:"#fff",color:"#1A2E00",border:"none",borderRadius:20,padding:"18px",fontSize:16,fontWeight:700,cursor:"pointer",width:"100%",fontFamily:"inherit",boxShadow:"0 4px 16px rgba(0,0,0,0.12)"}}>
+        {step<2?"다음":"시작하기 🌿"}
+      </button>
+      {step<2&&<button onClick={onDone} style={{background:"rgba(255,255,255,0.3)",border:"none",color:"#1A2E00",fontSize:14,marginTop:16,cursor:"pointer",fontFamily:"inherit",padding:"8px 24px",borderRadius:20}}>건너뛰기</button>}
+    </div>
+  );
+}
+
+// ─── CONTENT POSTS DATA ───────────────────────────────────────────────────────
+const CONTENT_POSTS = [
+  { id:1, author:"초록손유진", avatar:"🌿", tag:"케어팁", title:"몬스테라 잎이 노래진다면?", desc:"과습 vs 직사광선 구별법", emoji:"🌿", bg:"#EEF7B0", color:"#2D5000", likes:284, saves:91,
+    body:[
+      {type:"heading", text:"잎이 노랗게 변하는 건 신호예요"},
+      {type:"text", text:"몬스테라 잎이 노래지는 이유는 크게 두 가지예요. 과습이거나, 직사광선에 오래 노출됐거나. 둘을 구별하는 게 치료의 시작이에요."},
+      {type:"tip", label:"과습 체크", text:"흙을 손가락 두 마디 깊이로 찔러보세요. 아직 촉촉하면 물주기를 멈추고 3~4일 더 기다려요."},
+      {type:"text", text:"직사광선 피해는 잎 가장자리부터 갈변이 시작돼요. 반면 과습은 잎 전체가 균일하게 노래지는 경향이 있어요."},
+      {type:"tip", label:"위치 조정", text:"커튼 한 겹 걸린 창가가 몬스테라에게 최적이에요. 빛은 밝지만 직접 닿지 않는 간접광이 필요해요."},
+      {type:"text", text:"노란 잎은 다시 초록으로 돌아오지 않아요. 원인을 제거하고 새 잎이 건강하게 자라도록 환경을 바꿔주세요."},
+    ]
+  },
+  { id:2, author:"선인장러버", avatar:"🌵", tag:"인테리어", title:"다육이로 책상 꾸미기", desc:"작은 공간도 정글처럼", emoji:"🌵", bg:"#C8E85A", color:"#6AAF00", likes:512, saves:203,
+    body:[
+      {type:"heading", text:"책상 위 미니 정원 만들기"},
+      {type:"text", text:"다육이는 관리가 쉬우면서도 인테리어 효과가 큰 식물이에요. 작은 세라믹 화분에 3~4종을 묶으면 그것만으로도 분위기가 확 달라져요."},
+      {type:"tip", label:"배치 포인트", text:"키 차이를 활용하세요. 높은 에케베리아, 옆으로 퍼지는 세덤, 작고 귀여운 하월시아를 조합하면 입체감이 생겨요."},
+      {type:"text", text:"화분 색을 2가지로 통일하면 여러 종류를 둬도 정리돼 보여요. 흰색+테라코타, 또는 검정+그린 계열 조합이 잘 어울려요."},
+      {type:"tip", label:"관리 팁", text:"책상은 에어컨 바람이 직접 닿는 경우가 많아요. 다육이도 건조한 바람에 오래 노출되면 잎이 쪼그라들 수 있으니 위치를 잘 잡아주세요."},
+    ]
+  },
+  { id:3, author:"식물일기", avatar:"🍃", tag:"성장기록", title:"칼라데아 새잎 나왔어요!", desc:"2주 만에 드디어...", emoji:"🍃", bg:"#B5D94A", color:"#4A7C00", likes:178, saves:44,
+    body:[
+      {type:"heading", text:"2주를 기다렸어요"},
+      {type:"text", text:"칼라데아 오르비폴리아를 데려온 지 두 달이 됐어요. 처음에는 잎이 몇 개 갈변되어서 걱정도 많이 했는데, 드디어 새 잎이 올라왔어요."},
+      {type:"tip", label:"새잎이 올라올 때", text:"롤처럼 말린 채로 올라오는 게 정상이에요. 펼쳐지기까지 3~5일 걸리는데, 이 시기에 분무를 자주 해주면 더 건강하게 펼쳐져요."},
+      {type:"text", text:"칼라데아는 습도에 굉장히 민감해요. 저는 가습기를 옆에 두고 있는데, 그게 새잎 성장에 확실히 도움이 된 것 같아요."},
+      {type:"text", text:"아직 완전히 펼쳐지지 않았지만 무늬가 선명하게 보이기 시작했어요. 다음 달에는 또 어떤 모습이 될지 기대돼요 🍃"},
+    ]
+  },
+  { id:4, author:"허브농장", avatar:"🌱", tag:"가드닝", title:"베란다 허브 키우는 법", desc:"바질부터 로즈마리까지", emoji:"🌱", bg:"#CAF0F8", color:"#457B9D", likes:341, saves:129,
+    body:[
+      {type:"heading", text:"베란다를 허브 농장으로"},
+      {type:"text", text:"햇빛이 잘 드는 베란다라면 허브를 키우기 최적이에요. 바질, 민트, 로즈마리, 타임 — 요리에도 쓰고 향도 즐기고, 일석이조예요."},
+      {type:"tip", label:"초보자 추천 순서", text:"민트 → 바질 → 로즈마리 순으로 도전해보세요. 민트는 거의 죽지 않고, 바질은 물만 잘 줘도 쑥쑥 자라요."},
+      {type:"text", text:"허브는 흙이 마르면 바로 물을 줘야 해요. 과습보다 건조에 더 민감한 편이에요. 특히 바질은 흙이 마르면 잎이 바로 처지는 걸로 신호를 줘요."},
+      {type:"tip", label:"수확 타이밍", text:"잎을 자를 때는 위에서 두 번째 마디 위에서 잘라요. 그러면 두 가지로 가지가 갈라지면서 더 풍성해져요."},
+      {type:"text", text:"베란다 허브는 한 번 자리를 잡으면 거의 알아서 자라요. 요리할 때마다 뜯어 쓸 수 있는 것 자체가 큰 즐거움이에요."},
+    ]
+  },
+  { id:5, author:"분갈이장인", avatar:"🪴", tag:"케어팁", title:"봄 분갈이 타이밍", desc:"이 신호가 보이면 바로!", emoji:"🪴", bg:"#FFF3CC", color:"#A06800", likes:267, saves:88,
+    body:[
+      {type:"heading", text:"분갈이 해야 할 3가지 신호"},
+      {type:"text", text:"봄은 분갈이 최적의 계절이에요. 생장이 활발해지는 시기라 새 흙 적응도 빠르고 뿌리 충격에서도 빠르게 회복해요."},
+      {type:"tip", label:"신호 1", text:"화분 밑 구멍으로 뿌리가 나오기 시작했다면 이미 늦은 신호예요. 바로 한 치수 큰 화분으로 옮겨주세요."},
+      {type:"tip", label:"신호 2", text:"물을 줘도 금방 마르거나, 흙이 화분 벽에서 떨어지기 시작하면 뿌리가 흙 공간을 모두 채운 거예요."},
+      {type:"tip", label:"신호 3", text:"성장이 갑자기 느려지거나 멈췄다면 뿌리 과밀일 가능성이 높아요. 화분을 뒤집어서 뿌리 상태를 확인해보세요."},
+      {type:"text", text:"분갈이 후 2주는 직사광선을 피하고 물주기를 살짝 줄여주는 게 좋아요. 뿌리가 새 환경에 적응하는 시간을 주는 거예요."},
+    ]
+  },
+];
+
+// ─── HOME ─────────────────────────────────────────────────────────────────────
+function HomeScreen({plants,notifs,waterLog,plantPhotos,onPlant,onNotif,onWater,doneUrgent,onAllPlants,onContent,savedPosts,onToggleSave}){
+  const urgent=notifs.filter(n=>n.urgent);
+  const allDone=urgent.length>0&&urgent.every(n=>doneUrgent.has(n.id));
+  const today=new Date();
+  const yy=String(today.getFullYear()).slice(2);
+  const mm=today.getMonth()+1;
+  const dd=today.getDate();
+
+  function fmtTime(log){
+    const d=new Date(log.date);
+    const now=new Date();
+    const isToday=d.toDateString()===now.toDateString();
+    const yest=new Date(now);yest.setDate(now.getDate()-1);
+    const isYest=d.toDateString()===yest.toDateString();
+    const t=log.time||"";
+    if(!t) return isToday?"오늘":isYest?"어제":"";
+    const h=parseInt(t.split(":")[0]);
+    const min=t.split(":")[1]||"00";
+    const ampm=h<12?"오전":"오후";
+    const h12=(h%12)||12;
+    const ts=ampm+" "+h12+":"+min;
+    if(isToday) return "오늘 "+ts;
+    if(isYest)  return "어제 "+ts;
+    return mm+"월 "+dd+"일 "+ts;
+  }
+
+  // 식물 D-day 아이콘: 물주기면 💧, 분갈이면 🪴
+  function getDIcon(p){
+    if(p.alerts&&p.alerts.some(a=>a.includes("분갈이"))) return "🪴";
+    return "💧";
+  }
+
+  return(
+    <div style={{height:"100%",minHeight:0,overflowY:"auto",background:"#F5F9E8",paddingBottom:80}}>
+
+      {/* ── 헤더 #E4FF66 ── */}
+      <div style={{height:140,background:"#E4FF66",padding:"36px 20px 0",display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexShrink:0}}>
+        <div>
+          <div style={{fontSize:13,fontWeight:500,color:"#5A7000",marginBottom:5}}>{yy}년 {mm}월 {dd}일</div>
+          <div style={{fontSize:26,fontWeight:800,color:"#1A2E00",letterSpacing:-0.5,lineHeight:1.2}}>안녕하세요!</div>
+        </div>
+        <button onClick={onNotif} className="bp" style={{marginTop:4,background:"none",border:"none",padding:4,cursor:"pointer",position:"relative",flexShrink:0}}>
+          <Mi name="notifications" size={26} color="#1A2E00" />
+          {urgent.length>0&&!allDone&&<span style={{position:"absolute",top:4,right:4,width:8,height:8,background:"#FF3B30",borderRadius:"50%",border:"1.5px solid #E4FF66"}}/>}
+        </button>
+      </div>
+
+      {/* ── 본문 ── */}
+      <div style={{padding:"20px 16px 0"}}>
+
+        {/* ① 오늘 식물에게 해줄 것 */}
+        <div style={{marginBottom:26}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <span style={{fontSize:15,fontWeight:700,color:"#1A2E00"}}>오늘 식물에게 해줄 것</span>
+            <span style={{fontSize:13,color:"#888",cursor:"pointer"}}>전체보기</span>
+          </div>
+          {allDone?(
+            <div style={{background:"#fff",borderRadius:14,padding:"18px 16px",textAlign:"center"}}>
+              <div style={{fontSize:14,color:"#7A9A3A"}}>오늘 할 일을 모두 마쳤어요 ✨</div>
+            </div>
+          ):urgent.length>0?(
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {urgent.map(n=>{
+                const p=plants.find(pl=>pl.name===n.plant);
+                const done=doneUrgent.has(n.id);
+                const isWater=n.type==="water";
+                const sub=p&&isWater
+                  ? "마지막 물주기 "+p.lastWatered+"일 전 · 권장 "+p.water+"일"
+                  : p&&n.type==="repot"
+                  ? "분갈이 주기 "+p.repot+"일"
+                  : n.msg;
+                return(
+                  <div key={n.id} style={{background:"#fff",borderRadius:14,padding:"14px 14px",display:"flex",alignItems:"center",gap:12,opacity:done?0.7:1}}>
+                    <div style={{width:44,height:44,borderRadius:"50%",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",background:isWater?"#E6F2FF":"#F2EBE0",fontSize:20}}>
+                      {n.emoji}
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:14,fontWeight:700,color:"#1A2E00",marginBottom:2,textDecoration:done?"line-through":"none"}}>{n.plant}</div>
+                      <div style={{fontSize:12,color:"#999"}}>{done?"완료!":sub}</div>
+                    </div>
+                    {done?(
+                      <div style={{flexShrink:0,background:"#E4FF66",borderRadius:20,padding:"5px 16px",fontSize:13,fontWeight:700,color:"#1A2E00"}}>완료</div>
+                    ):(
+                      <button className="bp" onClick={()=>{if(p)onWater(n.id,p.id);}} style={{flexShrink:0,background:"#E4FF66",border:"none",borderRadius:20,padding:"5px 16px",fontSize:13,fontWeight:700,color:"#1A2E00",cursor:"pointer",fontFamily:"inherit"}}>완료</button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ):(
+            <div style={{background:"#fff",borderRadius:14,padding:"18px 16px",textAlign:"center"}}>
+              <div style={{fontSize:14,color:"#7A9A3A"}}>오늘은 할 일이 없어요 🌿</div>
+            </div>
+          )}
+        </div>
+
+        {/* ② 내 식물 */}
+        <div style={{marginBottom:26}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <span style={{fontSize:15,fontWeight:700,color:"#1A2E00"}}>내 식물</span>
+            <span onClick={onAllPlants} style={{fontSize:13,color:"#888",cursor:"pointer"}}>전체보기</span>
+          </div>
+          <div style={{display:"flex",gap:10,overflowX:"auto",marginLeft:-16,paddingLeft:16,marginRight:-16,paddingRight:16,paddingBottom:4,WebkitOverflowScrolling:"touch",scrollbarWidth:"none",msOverflowStyle:"none"}}>
+            {plants.map(p=>{
+              const photo=plantPhotos[p.id];
+              const icon=getDIcon(p);
+              const dColor=p.nextWater===0?"#FF3B30":"#4A7CC0";
+              return(
+                <button key={p.id} onClick={()=>onPlant(p)} className="bp" style={{flexShrink:0,width:100,background:"none",border:"none",padding:0,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
+                  <div style={{width:100,height:115,borderRadius:14,overflow:"hidden",marginBottom:8,background:p.bg||"#C8E8C0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:42}}>
+                    {photo?<img src={photo} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:<span>{p.emoji}</span>}
+                  </div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#1A2E00",marginBottom:3}}>{p.nickname}</div>
+                  <div style={{fontSize:12,fontWeight:500,color:dColor,display:"flex",alignItems:"center",justifyContent:"center",gap:2}}>
+                    <span>{icon}</span><span>D-{p.nextWater}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ③ 가족 활동 */}
+        <div style={{marginBottom:26}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <span style={{fontSize:15,fontWeight:700,color:"#1A2E00"}}>가족 활동</span>
+            <span style={{fontSize:13,color:"#888",cursor:"pointer"}}>전체보기</span>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {waterLog.slice(0,3).map((log,i)=>{
+              const plant=plants.find(p=>p.id===log.plantId);
+              return(
+                <div key={log.id||i} style={{background:"#fff",borderRadius:14,padding:"14px 14px",display:"flex",alignItems:"center",gap:12}}>
+                  <div style={{width:44,height:44,borderRadius:"50%",flexShrink:0,background:"#F0F4E8",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,overflow:"hidden"}}>
+                    {log.memberAvatar}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:14,fontWeight:700,color:"#1A2E00",marginBottom:3,lineHeight:1.4}}>
+                      {log.memberName} 님이 {plant?.nickname} {log.action} 완료
+                    </div>
+                    <div style={{fontSize:12,color:"#999"}}>{fmtTime(log)}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ④ 나와 딱 맞는 식물 배너 */}
+        <div style={{background:"#E4FF66",borderRadius:20,padding:"22px 20px",marginBottom:26,position:"relative",overflow:"hidden",minHeight:140,display:"flex",alignItems:"center"}}>
+          <div style={{flex:1,zIndex:1}}>
+            <div style={{fontSize:18,fontWeight:800,color:"#1A2E00",lineHeight:1.35,marginBottom:8}}>나와 딱 맞는<br/>식물을 찾아보세요!</div>
+            <div style={{fontSize:12,color:"#5A7000",lineHeight:1.6,marginBottom:16}}>성격, 라이프스타일 기반으로<br/>내 식물 유형을 알아봐요</div>
+            <button className="bp" onClick={()=>window.open("https://jihyunlucia.github.io/rest-in-plants/","_blank")} style={{background:"#fff",border:"none",borderRadius:20,padding:"8px 18px",fontSize:13,fontWeight:700,color:"#1A2E00",cursor:"pointer",fontFamily:"inherit"}}>테스트 시작하기</button>
+          </div>
+          <div style={{position:"absolute",right:-10,bottom:-10,fontSize:110,lineHeight:1,opacity:0.85,transform:"rotate(-10deg)",userSelect:"none"}}>🌴</div>
+        </div>
+
+        {/* ⑤ 식물이 궁금하다면! */}
+        <div style={{marginBottom:24}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <span style={{fontSize:15,fontWeight:700,color:"#1A2E00"}}>식물이 궁금하다면!</span>
+            <span onClick={onContent} style={{fontSize:13,color:"#888",cursor:"pointer"}}>전체보기</span>
+          </div>
+          <div style={{display:"flex",gap:10,overflowX:"auto",marginLeft:-16,paddingLeft:16,marginRight:-16,paddingRight:16,paddingBottom:4,WebkitOverflowScrolling:"touch",scrollbarWidth:"none",msOverflowStyle:"none"}}>
+            {CONTENT_POSTS.map(post=>{
+              const isSaved=savedPosts&&savedPosts.includes(post.id);
+              return(
+                <div key={post.id} onClick={onContent} style={{flexShrink:0,width:155,cursor:"pointer",position:"relative"}}>
+                  <div style={{width:155,height:155,borderRadius:14,overflow:"hidden",marginBottom:8,background:post.bg||"#E8F4E0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:60,position:"relative"}}>
+                    <span>{post.emoji}</span>
+                    <button onClick={e=>{e.stopPropagation();onToggleSave&&onToggleSave(post.id);}} className="bp" style={{position:"absolute",top:8,right:8,background:"rgba(255,255,255,0.85)",border:"none",borderRadius:"50%",width:30,height:30,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                      <Mi name={isSaved?"bookmark":"bookmark_border"} size={16} color={isSaved?"#4A7C00":"#999"} />
+                    </button>
+                  </div>
+                  <div style={{fontSize:14,fontWeight:700,color:"#1A2E00",marginBottom:3,lineHeight:1.3}}>{post.title}</div>
+                  <div style={{fontSize:12,color:"#999",lineHeight:1.4}}>{post.desc}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+// ─── MOISTURE BAR ─────────────────────────────────────────────────────────────
+function getMoistureInfo(m) {
+  if (m <= 25) return { label:"건조", emoji:"🏜️", color:"#E8784A", bg:"#FFF0E8", textColor:"#C1440E", tip:"물을 주세요!" };
+  if (m <= 55) return { label:"보통", emoji:"🌤️", color:"#F0A500", bg:"#FFF8E0", textColor:"#A06800", tip:"적당해요" };
+  if (m <= 80) return { label:"촉촉", emoji:"💧", color:"#6AAF00", bg:"#F3FAD0", textColor:"#1B5E38", tip:"좋아요" };
+  return { label:"과습 주의", emoji:"🌊", color:"#457B9D", bg:"#E8F4FF", textColor:"#1D4E72", tip:"물 주지 마세요" };
+}
+
+// 수분값에 따라 그라데이션 색상 보간
+function moistureColor(m) {
+  if (m <= 25) {
+    const t = m / 25;
+    return "rgb("+232+","+Math.round(120 + t*  2)+","+Math.round(74 + t*0)+")";
+  }
+  if (m <= 55) {
+    const t = (m - 25) / 30;
+    return "rgb("+Math.round(232 - t*112)+","+Math.round(122 + t*23)+","+Math.round(74 - t*74)+")";
+  }
+  if (m <= 80) {
+    const t = (m - 55) / 25;
+    return "rgb("+Math.round(120 - t*51)+","+Math.round(145 + t*0)+","+Math.round(0 + t*108)+")";
+  }
+  return "#457B9D";
+}
+
+function MoistureBar({ moisture, compact }) {
+  const info = getMoistureInfo(moisture);
+  const fillColor = moistureColor(moisture);
+  const p1 = Math.round(25/moisture*100);
+  const p2 = Math.round(55/moisture*100);
+  const fillGradient = "linear-gradient(90deg, #E8784A 0%, #F0A500 "+p1+"%, #40916C "+p2+"%, #457B9D 100%)";
+  const SEGMENTS = [
+    { label:"건조", end:25, color:"#E8784A" },
+    { label:"보통", end:55, color:"#F0A500" },
+    { label:"촉촉", end:80, color:"#6AAF00" },
+    { label:"과습", end:100, color:"#457B9D" },
+  ];
+
+  if (compact) {
+    return (
+      <div>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:5 }}>
+          <span style={{ fontSize:10, fontWeight:700, color:info.textColor }}>{info.emoji} {info.label}</span>
+          <span style={{ fontSize:10, color:"#B8C880" }}>흙 수분</span>
+        </div>
+        {/* 트랙 */}
+        <div style={{ position:"relative", height:8, background:"#EEF5EE", borderRadius:4 }}>
+          {/* Fill — 실제 값만큼만 채움, 끝부분 색상 보간 */}
+          <div style={{
+            position:"absolute", left:0, top:0, bottom:0,
+            width:moisture+"%",
+            background:"linear-gradient(90deg, #E8784A 0%, #F0A500 35%, #40916C 70%, #457B9D 100%)",
+            backgroundSize:100/(moisture/100)+"% 100%",
+            borderRadius:4,
+          }}/>
+          {/* 마커 — fill 끝에 딱 붙음 */}
+          <div style={{
+            position:"absolute", top:"50%",
+            left:"calc("+moisture+"% - 8px)",
+            transform:"translateY(-50%)",
+            width:16, height:16,
+            background:"#fff",
+            borderRadius:"50%",
+            border:"3px solid "+fillColor,
+            boxShadow:"0 1px 4px rgba(0,0,0,0.18)",
+          }}/>
+        </div>
+        <div style={{ display:"flex", justifyContent:"space-between", marginTop:4 }}>
+          {SEGMENTS.map((s,i) => (
+            <span key={i} style={{ fontSize:9, color: moisture <= s.end && (i===0 || moisture > SEGMENTS[i-1].end) ? s.color : "#C4D4CA", fontWeight: moisture <= s.end && (i===0 || moisture > SEGMENTS[i-1].end) ? 700 : 400 }}>{s.label}</span>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* 상태 뱃지 + % */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <div style={{ background:info.bg, borderRadius:20, padding:"6px 14px", display:"flex", alignItems:"center", gap:6 }}>
+            <span style={{ fontSize:18 }}>{info.emoji}</span>
+            <span style={{ fontSize:14, fontWeight:800, color:info.textColor }}>{info.label}</span>
+          </div>
+          <span style={{ fontSize:12, color:"#7A9A3A" }}>{info.tip}</span>
+        </div>
+        <span style={{ fontSize:22, fontWeight:900, color:fillColor }}>{moisture}%</span>
+      </div>
+
+      {/* 트랙 */}
+      <div style={{ position:"relative", height:16, background:"#EEF5EE", borderRadius:8, marginBottom:10 }}>
+        {/* 세그먼트 구분선 (트랙 위) */}
+        {[25,55,80].map(pos => (
+          <div key={pos} style={{
+            position:"absolute", left:pos+"%", top:0, bottom:0,
+            width:1, background:"rgba(255,255,255,0.7)", zIndex:1,
+          }}/>
+        ))}
+        {/* Fill — moisture% 까지만 그라데이션 채움 */}
+        <div style={{
+          position:"absolute", left:0, top:0, bottom:0,
+          width:moisture+"%",
+          borderRadius:8,
+          background:fillGradient,
+          transition:"width 0.5s ease",
+        }}/>
+        {/* 마커 — fill 오른쪽 끝에 정확히 위치 */}
+        <div style={{
+          position:"absolute", top:"50%",
+          left:"calc("+moisture+"% - 11px)",
+          transform:"translateY(-50%)",
+          width:22, height:22,
+          background:"#fff",
+          borderRadius:"50%",
+          border:"3px solid "+fillColor,
+          boxShadow:"0 2px 8px rgba(0,0,0,0.18), 0 0 0 3px "+fillColor+"22",
+          zIndex:2,
+          transition:"left 0.5s ease, border-color 0.3s",
+        }}/>
+      </div>
+
+      {/* 단계 레이블 */}
+      <div style={{ display:"flex" }}>
+        {SEGMENTS.map((seg, i) => {
+          const start = i === 0 ? 0 : SEGMENTS[i-1].end;
+          const active = moisture > start && moisture <= seg.end;
+          return (
+            <div key={i} style={{ width:seg.end - start+"%", textAlign:"center" }}>
+              <span style={{ fontSize:11, color: active ? seg.color : "#C4D4CA", fontWeight: active ? 800 : 400 }}>
+                {seg.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── MY PLANTS ────────────────────────────────────────────────────────────────
+function MyPlantsScreen({plants,plantPhotos,onPlant,onAdd,onBack}){
+  return(
+    <div style={{height:"100%",minHeight:0,overflowY:"auto",background:"#F5F9E8",paddingBottom:80,position:"relative"}}>
+      <ScreenHeader onBack={onBack} sub="MY GARDEN" label="내 식물" right={<button onClick={onAdd} className="bp" style={{background:"#D4F06E",color:"#2D5000",border:"none",borderRadius:14,padding:"8px 14px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>+ 추가</button>} bg="#2D5000" dark={true} />
+      <div style={{padding:"16px 20px 80px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+          {plants.map((p,i)=>{
+            const photo=plantPhotos[p.id];
+            return(
+              <button key={p.id} onClick={()=>onPlant(p)} className="ch bp" style={{background:"#fff",border:"none",borderRadius:24,padding:"16px",cursor:"pointer",fontFamily:"inherit",textAlign:"left",boxShadow:"0 2px 8px rgba(0,0,0,0.05)",animation:"fadeIn 0.3s ease "+i*0.05+"s both",position:"relative",overflow:"hidden"}}>
+                {p.alerts.length>0&&<div style={{position:"absolute",top:12,right:12,width:8,height:8,background:"#FF6B6B",borderRadius:"50%",zIndex:1}}/>}
+                {/* 상단: 식물 사진 or 이모지 */}
+                <div style={{width:"100%",height:100,borderRadius:16,overflow:"hidden",background:p.bg,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12,flexShrink:0}}>
+                  {photo
+                    ? <img src={photo} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>
+                    : <span style={{fontSize:52}}>{p.emoji}</span>
+                  }
+                </div>
+                <div style={{fontSize:15,fontWeight:800,color:"#2D5000",marginBottom:2}}>{p.nickname}</div>
+                <div style={{fontSize:11,color:"#7A9A3A",marginBottom:10}}>{p.name}</div>
+                <MoistureBar moisture={p.moisture} compact />
+                <div style={{fontSize:10,color:"#7A9A3A",marginTop:6}}>📍 {p.location}</div>
+              </button>
+            );
+          })}
+          <button onClick={onAdd} className="bp" style={{background:"transparent",border:"2px dashed #95D5B2",borderRadius:24,padding:"20px 16px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,minHeight:180}}>
+            <div style={{fontSize:32,color:"#8DB800"}}>➕</div>
+            <div style={{fontSize:13,fontWeight:700,color:"#8DB800"}}>식물 추가</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PLANT DETAIL ─────────────────────────────────────────────────────────────
+function PlantDetailScreen({plant,waterLog,plantPhotos,onSetPhoto,onWater,onBack}){
+  const [tab,setTab]=useState("info");
+  const fileRef=useRef();
+  const plantLog=waterLog.filter(l=>l.plantId===plant.id);
+  const profilePhoto=plantPhotos[plant.id]||null;
+
+  const handlePhotoChange=(e)=>{
+    const file=e.target.files[0];
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=(ev)=>onSetPhoto(plant.id, ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const headerBg="linear-gradient(160deg,"+plant.color+","+plant.color+"CC)";
+
+  return(
+    <div style={{height:"100%",minHeight:0,overflowY:"auto",background:"#F5F9E8",paddingBottom:80,position:"relative"}}>
+      <div style={{background:headerBg,padding:"12px 20px 32px",position:"relative"}}>
+        <div style={{marginBottom:20}}>
+          <button onClick={onBack} className="bp" style={{background:"none",border:"none",color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",lineHeight:1,padding:"0",display:"flex",alignItems:"center",gap:4}}>
+            <Mi name="arrow_back_ios_new" size={22} color="#fff" />
+          </button>
+        </div>
+        <div style={{display:"flex",alignItems:"flex-end",gap:16}}>
+          <div style={{position:"relative",flexShrink:0}}>
+            <div onClick={()=>fileRef.current.click()} style={{width:88,height:88,borderRadius:"50%",cursor:"pointer",border:"3px solid rgba(255,255,255,0.5)",background:profilePhoto?"transparent":"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.2)"}}>
+              {profilePhoto?<img src={profilePhoto} alt="plant" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:46}}>{plant.emoji}</span>}
+            </div>
+            <button onClick={()=>fileRef.current.click()} className="bp" style={{position:"absolute",bottom:2,right:2,width:26,height:26,borderRadius:"50%",background:"#fff",border:"2px solid "+plant.color,color:plant.color,fontSize:16,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",lineHeight:1,boxShadow:"0 2px 6px rgba(0,0,0,0.18)"}}>+</button>
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhotoChange}/>
+          <div style={{flex:1}}>
+            <div style={{color:"rgba(255,255,255,0.75)",fontSize:12}}>{plant.name}</div>
+            <div style={{color:"#fff",fontSize:26,fontWeight:800,marginTop:2}}>{plant.nickname}</div>
+            <div style={{color:"rgba(255,255,255,0.8)",fontSize:12,marginTop:4}}>📍 {plant.location}</div>
+          </div>
+        </div>
+        {plant.alerts.length>0&&(<div style={{marginTop:14,display:"flex",gap:8,flexWrap:"wrap"}}>{plant.alerts.map((a,i)=><span key={i} style={{background:"rgba(255,255,255,0.25)",color:"#fff",borderRadius:20,padding:"4px 12px",fontSize:11,fontWeight:600}}>{a}</span>)}</div>)}
+      </div>
+
+      <div style={{padding:"20px 20px 80px"}}>
+        <button onClick={onWater} className="bp" style={{width:"100%",background:"#4A7C00",color:"#fff",border:"none",borderRadius:16,padding:"14px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+          💧 물주기 / 관리 기록하기
+        </button>
+        <div style={{background:"#fff",borderRadius:20,padding:20,marginBottom:16,boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
+          <div style={{fontSize:13,fontWeight:700,color:"#2D5000",marginBottom:14}}>🌱 흙 수분 상태</div>
+          <MoistureBar moisture={plant.moisture} />
+        </div>
+        <div style={{display:"flex",background:"#fff",borderRadius:16,padding:4,marginBottom:16,boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+          {[{key:"info",label:"관리 정보"},{key:"log",label:"활동 "+plantLog.length},{key:"tags",label:"특성"}].map(t=>(
+            <button key={t.key} onClick={()=>setTab(t.key)} style={{flex:1,padding:"10px 0",borderRadius:12,border:"none",background:tab===t.key?"#4A7C00":"transparent",color:tab===t.key?"#fff":"#7A9A3A",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"all 0.2s"}}>{t.label}</button>
+          ))}
+        </div>
+        {tab==="info"&&(
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,animation:"fadeIn 0.3s ease"}}>
+            {[{label:"물주기 주기",value:plant.water+"일마다",emoji:"💧"},{label:"마지막 물주기",value:plant.lastWatered+"일 전",emoji:"📅"},{label:"다음 물주기",value:"D-"+plant.nextWater,emoji:"⏰"},{label:"분갈이 주기",value:plant.repot+"일마다",emoji:"🪴"}].map((item,i)=>(
+              <div key={i} style={{background:"#fff",borderRadius:16,padding:16,boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+                <div style={{fontSize:24,marginBottom:8}}>{item.emoji}</div>
+                <div style={{fontSize:18,fontWeight:800,color:"#2D5000"}}>{item.value}</div>
+                <div style={{fontSize:11,color:"#7A9A3A",marginTop:4}}>{item.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        {tab==="log"&&(
+          <div style={{animation:"fadeIn 0.3s ease"}}>
+            {plantLog.length===0?(
+              <div style={{background:"#fff",borderRadius:20,padding:32,textAlign:"center"}}><div style={{marginBottom:12}}><Mi name="assignment" size={36} color="#B8C880" /></div><div style={{fontSize:14,color:"#7A9A3A"}}>아직 기록이 없어요</div></div>
+            ):plantLog.map((log,i)=>(
+              <div key={log.id} style={{background:"#fff",borderRadius:16,padding:"14px 16px",display:"flex",alignItems:"flex-start",gap:12,boxShadow:"0 1px 4px rgba(0,0,0,0.04)",marginBottom:10}}>
+                <span style={{fontSize:28}}>{log.memberAvatar}</span>
+                <div style={{flex:1}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{fontSize:13,fontWeight:700,color:"#2D5000"}}>{log.memberName}</div>
+                    <div style={{fontSize:11,color:"#B8C880"}}>{(()=>{const d=new Date(log.date);return isNaN(d)?"":((d.getMonth()+1)+"월 "+d.getDate()+"일");})()}</div>
+                  </div>
+                  <div style={{fontSize:12,color:"#5A7A00",marginTop:2}}>{log.action} · {log.time}</div>
+                  {log.note?<div style={{fontSize:11,color:"#7A9A3A",marginTop:4,background:"#F5F9E8",borderRadius:8,padding:"4px 8px"}}>"{log.note}"</div>:null}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {tab==="tags"&&(
+          <div style={{background:"#fff",borderRadius:20,padding:20,animation:"fadeIn 0.3s ease"}}>
+            <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+              {plant.tags.map((t,i)=><span key={i} style={{background:"#EEF7B0",color:"#2D5000",borderRadius:20,padding:"8px 16px",fontSize:13,fontWeight:600}}>{t}</span>)}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── ADD PLANT (with 75-species search) ──────────────────────────────────────
+function AddPlantScreen({step,setStep,onDone,onBack}){
+  const [selDb,setSelDb]=useState(null);
+  const [customMode,setCustomMode]=useState(false);
+  const [customName,setCustomName]=useState("");
+  const [customEmoji,setCustomEmoji]=useState("🌱");
+  const [customTraits,setCustomTraits]=useState([]); // 선택한 특성 태그들
+  const [customLight,setCustomLight]=useState("");
+  const [query,setQuery]=useState("");
+  const [catIdx,setCatIdx]=useState(0);
+  const [nickname,setNickname]=useState("");
+  const [location,setLocation]=useState("");
+  const [waterDays,setWaterDays]=useState(7);
+
+  // 커스텀 모드에서 step 0.5 = 특성 선택
+  const [showTraits,setShowTraits]=useState(false);
+
+  const EMOJI_OPTIONS=["🌱","🌿","🍃","🌳","🌵","🌴","🌸","🌺","🌼","🫒","🍋","🍅","🥬","🌷","🎋","🪴","🤍","🫙","🫛"];
+  const TRAIT_OPTIONS=[
+    {tag:"초보자용",emoji:"👶"},
+    {tag:"공기정화",emoji:"💨"},
+    {tag:"반음지",emoji:"🌤"},
+    {tag:"직사광선",emoji:"☀️"},
+    {tag:"물 적게",emoji:"💧"},
+    {tag:"습도 높게",emoji:"🌫"},
+    {tag:"반려동물 안전",emoji:"🐾"},
+    {tag:"성장 빠름",emoji:"🚀"},
+    {tag:"향기로움",emoji:"🌸"},
+    {tag:"행운",emoji:"🍀"},
+    {tag:"미세먼지 제거",emoji:"🌬"},
+    {tag:"겨울 강함",emoji:"❄️"},
+  ];
+  const LIGHT_OPTIONS=["직사광선","밝은 간접광","반음지","음지"];
+
+  const filtered=PLANT_DB.filter(p=>{
+    const cat=PLANT_CATEGORIES[catIdx];
+    const matchCat=cat.filter?cat.filter(p):true;
+    const matchQ=query===""||p.name.toLowerCase().includes(query.toLowerCase());
+    return matchCat&&matchQ;
+  });
+
+  const currentPlant = customMode
+    ? (customName ? { name:customName, emoji:customEmoji, water:waterDays, tags:customTraits, light:customLight||"미설정" } : null)
+    : selDb;
+
+  const goNext = () => {
+    if(customMode && !showTraits) { setShowTraits(true); return; }
+    setShowTraits(false);
+    setStep(1);
+  };
+
+  const STEP_LABELS=["식물 선택","별명 짓기","위치 설정","물주기 주기"];
+
+  if(step===4){
+    return(
+      <div style={{height:"100%",minHeight:0,background:"#F5F9E8",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:32,gap:24}}>
+        <div style={{fontSize:80,animation:"sprout 1s ease"}}>{customMode?customEmoji:selDb?.emoji||"🌱"}</div>
+        <div style={{color:"#2D5000",fontSize:26,fontWeight:800,textAlign:"center"}}>등록 완료!</div>
+        <div style={{color:"#5A7A00",fontSize:15,textAlign:"center"}}>{nickname||(customMode?customName:selDb?.name)||"새 식물"}이/가 내 정원에 합류했어요 🎉</div>
+        <button className="bp" onClick={onDone} style={{background:"#C8E85A",color:"#2D5000",border:"none",borderRadius:20,padding:"18px 48px",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginTop:16}}>내 식물원 보기</button>
+      </div>
+    );
+  }
+
+  return(
+    <div style={{height:"100%",minHeight:0,display:"flex",flexDirection:"column",background:"#F5F9E8"}}>
+      <div style={{background:"#2D5000",padding:"12px 20px 16px",flexShrink:0}}>
+        <button onClick={showTraits?()=>setShowTraits(false):onBack} className="bp" style={{background:"none",border:"none",color:"rgba(255,255,255,0.85)",fontSize:13,fontWeight:600,cursor:"pointer",lineHeight:1,padding:"0",marginBottom:16,display:"flex",alignItems:"center",gap:4}}>
+          <Mi name="arrow_back_ios_new" size={22} color="rgba(255,255,255,0.9)" />
+        </button>
+        <div style={{color:"rgba(255,255,255,0.6)",fontSize:12,marginBottom:4}}>
+          {showTraits ? "직접 입력 — 특성 선택" : "STEP "+step+1+" / 4"}
+        </div>
+        <div style={{color:"#fff",fontSize:20,fontWeight:800}}>
+          {showTraits ? "식물 특성 선택" : STEP_LABELS[step]}
+        </div>
+        {!showTraits&&<div style={{display:"flex",gap:4,marginTop:14}}>
+          {[0,1,2,3].map(i=><div key={i} style={{flex:1,height:4,borderRadius:2,background:i<=step?"#E4FF66":"rgba(255,255,255,0.25)"}}/>)}
+        </div>}
+      </div>
+
+      <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+        {step===0&&!showTraits&&(
+          <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            {/* 모드 토글 탭 */}
+            <div style={{display:"flex",background:"#fff",padding:"10px 16px 0",borderBottom:"1px solid #E8F4EA",flexShrink:0}}>
+              <button onClick={()=>{setCustomMode(false);}} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",borderBottom:!customMode?"3px solid #2D6A4F":"3px solid transparent",color:!customMode?"#2D5000":"#7A9A3A",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"all 0.2s"}}>🌿 식물 DB 검색</button>
+              <button onClick={()=>{setCustomMode(true);}} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",borderBottom:customMode?"3px solid #2D6A4F":"3px solid transparent",color:customMode?"#2D5000":"#7A9A3A",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"all 0.2s"}}><span style={{display:"flex",alignItems:"center",gap:4}}><Mi name="edit" size={14} />직접 입력</span></button>
+            </div>
+
+            {!customMode ? (
+              <>
+                <div style={{padding:"12px 16px 8px",background:"#fff",flexShrink:0}}>
+                  <div style={{position:"relative"}}>
+                    <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:16}}><Mi name="search" size={20} color="#7A9A3A" /></span>
+                    <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="식물 이름으로 검색..." style={{width:"100%",padding:"10px 12px 10px 38px",borderRadius:12,border:"2px solid #E0EEE4",background:"#F8FCF8",fontSize:14,color:"#2D5000",fontFamily:"inherit",outline:"none"}}/>
+                    {query&&<button onClick={()=>setQuery("")} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:16,color:"#7A9A3A"}}>✕</button>}
+                  </div>
+                  <div style={{display:"flex",gap:6,overflowX:"auto",marginTop:10,paddingBottom:6}}>
+                    {PLANT_CATEGORIES.map((c,i)=>(
+                      <button key={i} onClick={()=>setCatIdx(i)} style={{background:catIdx===i?"#4A7C00":"#F5F9E8",color:catIdx===i?"#fff":"#5A7A00",border:"none",borderRadius:20,padding:"6px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",flexShrink:0}}>{c.label}</button>
+                    ))}
+                  </div>
+                </div>
+                <div style={{padding:"6px 16px 4px",background:"#F8FCF8",flexShrink:0}}>
+                  <span style={{fontSize:12,color:"#7A9A3A"}}>{filtered.length}종 표시 중</span>
+                </div>
+                <div style={{flex:1,overflowY:"auto",padding:"8px 12px 80px"}}>
+                  {filtered.length===0?(
+                    <div style={{textAlign:"center",padding:"32px 0",color:"#7A9A3A"}}>
+                      <div style={{fontSize:40,marginBottom:12}}>🌿</div>
+                      <div style={{fontSize:14,marginBottom:16}}>검색 결과가 없어요</div>
+                      <button onClick={()=>setCustomMode(true)} style={{background:"#F3FAD0",color:"#4A7C00",border:"none",borderRadius:14,padding:"10px 20px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}><span style={{display:"flex",alignItems:"center",gap:4}}><Mi name="edit" size={14} />직접 입력하기</span></button>
+                    </div>
+                  ):(
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+                      {filtered.map((p,i)=>(
+                        <button key={p.name} onClick={()=>{setSelDb(p);setWaterDays(p.water);}} className="bp" style={{background:selDb?.name===p.name?"#4A7C00":"#fff",color:selDb?.name===p.name?"#fff":"#2D5000",border:"2px solid",borderColor:selDb?.name===p.name?"#4A7C00":"#E8F4EA",borderRadius:16,padding:"12px 6px",cursor:"pointer",fontFamily:"inherit",textAlign:"center",animation:"fadeIn 0.2s ease "+Math.min(i,10)*0.03+"s both",transition:"all 0.15s"}}>
+                          <div style={{fontSize:28,marginBottom:4,textAlign:"center"}}>{p.emoji}</div>
+                          <div style={{fontSize:11,fontWeight:700,lineHeight:1.3,textAlign:"center"}}>{p.name}</div>
+                          <div style={{fontSize:9,marginTop:4,opacity:0.7,textAlign:"center"}}>{p.light}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {selDb&&(
+                  <div style={{padding:"12px 16px 20px",background:"#fff",borderTop:"1px solid #E8F4EA",flexShrink:0,animation:"slideDown 0.2s ease"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                      <span style={{fontSize:32}}>{selDb.emoji}</span>
+                      <div>
+                        <div style={{fontSize:14,fontWeight:800,color:"#2D5000"}}>{selDb.name}</div>
+                        <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:4}}>
+                          {selDb.tags.slice(0,2).map((t,i)=><span key={i} style={{background:"#EEF7B0",color:"#4A7C00",borderRadius:8,padding:"1px 7px",fontSize:10,fontWeight:600}}>{t}</span>)}
+                          <span style={{background:"#EEF4FF",color:"#4C6FCC",borderRadius:8,padding:"1px 7px",fontSize:10,fontWeight:600}}>💧 {selDb.water}일</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button className="bp" onClick={goNext} style={{width:"100%",background:"#4A7C00",color:"#fff",border:"none",borderRadius:14,padding:"15px",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}><span style={{display:"flex",alignItems:"center",gap:4}}>이 식물로 시작하기 <Mi name="arrow_forward" size={15} /></span></button>
+                  </div>
+                )}
+              </>
+            ) : (
+              /* ── 직접 입력 모드 ── */
+              <div style={{flex:1,overflowY:"auto",padding:"20px 20px 80px"}}>
+                <div style={{marginBottom:20}}>
+                  <div style={{fontSize:13,fontWeight:700,color:"#5A7A00",marginBottom:10}}>식물 아이콘 선택</div>
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                    {EMOJI_OPTIONS.map(em=>(
+                      <button key={em} onClick={()=>setCustomEmoji(em)} style={{width:48,height:48,borderRadius:14,border:"2px solid "+customEmoji===em?"#4A7C00":"#E8F2B0",background:customEmoji===em?"#F3FAD0":"#fff",fontSize:24,cursor:"pointer",transition:"all 0.15s",display:"flex",alignItems:"center",justifyContent:"center"}}>{em}</button>
+                    ))}
+                  </div>
+                </div>
+                <div style={{marginBottom:20}}>
+                  <div style={{fontSize:13,fontWeight:700,color:"#5A7A00",marginBottom:8}}>식물 이름 <span style={{color:"#FF6B6B"}}>*</span></div>
+                  <input value={customName} onChange={e=>setCustomName(e.target.value)} placeholder="예: 레몬 버베나, 수선화, 무화과..." style={{width:"100%",padding:"14px 16px",borderRadius:14,border:"2px solid "+customName?"#4A7C00":"#E8F2B0",background:"#fff",fontSize:15,fontWeight:600,color:"#2D5000",fontFamily:"inherit",outline:"none"}}/>
+                </div>
+                {customName&&(
+                  <div style={{background:"#F3FAD0",borderRadius:16,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,marginBottom:20,animation:"fadeIn 0.2s ease"}}>
+                    <span style={{fontSize:40}}>{customEmoji}</span>
+                    <div>
+                      <div style={{fontSize:15,fontWeight:800,color:"#2D5000"}}>{customName}</div>
+                      <div style={{fontSize:12,color:"#5A7A00",marginTop:2}}>다음 단계에서 특성을 선택해요 🌱</div>
+                    </div>
+                  </div>
+                )}
+                <button className="bp" onClick={goNext} disabled={!customName} style={{width:"100%",background:customName?"#4A7C00":"#B8C880",color:"#fff",border:"none",borderRadius:16,padding:"16px",fontSize:15,fontWeight:700,cursor:customName?"pointer":"default",fontFamily:"inherit"}}><span style={{display:"flex",alignItems:"center",gap:4}}>다음: 특성 선택 <Mi name="arrow_forward" size={15} /></span></button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── 직접 입력: 특성 선택 step ── */}
+        {step===0&&showTraits&&(
+          <div style={{flex:1,overflowY:"auto",padding:"20px 20px 80px",animation:"fadeIn 0.3s ease"}}>
+            <div style={{background:"#F3FAD0",borderRadius:14,padding:"12px 16px",display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
+              <span style={{fontSize:32}}>{customEmoji}</span>
+              <div style={{fontSize:14,fontWeight:800,color:"#2D5000"}}>{customName}</div>
+            </div>
+
+            {/* 빛 조건 */}
+            <div style={{marginBottom:20}}>
+              <div style={{fontSize:13,fontWeight:700,color:"#5A7A00",marginBottom:10}}>☀️ 빛 조건</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                {LIGHT_OPTIONS.map(l=>(
+                  <button key={l} onClick={()=>setCustomLight(l)} style={{background:customLight===l?"#4A7C00":"#fff",color:customLight===l?"#fff":"#2D5000",border:"2px solid "+customLight===l?"#4A7C00":"#E8F2B0",borderRadius:12,padding:"11px 10px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s"}}>{l}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* 특성 태그 */}
+            <div style={{marginBottom:24}}>
+              <div style={{fontSize:13,fontWeight:700,color:"#5A7A00",marginBottom:4}}>🏷 특성 태그 <span style={{fontSize:11,fontWeight:400,color:"#B8C880"}}>(여러 개 선택 가능)</span></div>
+              <div style={{fontSize:11,color:"#B8C880",marginBottom:10}}>내 식물의 특성에 맞는 태그를 골라주세요</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                {TRAIT_OPTIONS.map(t=>{
+                  const sel=customTraits.includes(t.tag);
+                  return(
+                    <button key={t.tag} onClick={()=>setCustomTraits(prev=>sel?prev.filter(x=>x!==t.tag):[...prev,t.tag])} style={{background:sel?"#4A7C00":"#fff",color:sel?"#fff":"#5A7A00",border:"2px solid "+sel?"#4A7C00":"#E8F2B0",borderRadius:20,padding:"8px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5,transition:"all 0.15s"}}>
+                      <span>{t.emoji}</span> {t.tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {customTraits.length>0&&(
+              <div style={{background:"#F5F9E8",borderRadius:12,padding:"10px 14px",marginBottom:16}}>
+                <div style={{fontSize:11,color:"#5A7A00",fontWeight:600,marginBottom:6}}>선택된 특성</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                  {customTraits.map(t=><span key={t} style={{background:"#EEF7B0",color:"#2D5000",borderRadius:20,padding:"4px 12px",fontSize:11,fontWeight:700}}>{t}</span>)}
+                </div>
+              </div>
+            )}
+
+            <button className="bp" onClick={()=>{setShowTraits(false);setStep(1);}} style={{width:"100%",background:"#4A7C00",color:"#fff",border:"none",borderRadius:16,padding:"16px",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}><span style={{display:"flex",alignItems:"center",gap:4}}>다음 단계로 <Mi name="arrow_forward" size={15} /></span></button>
+          </div>
+        )}
+
+        {step===1&&(
+          <div style={{flex:1,padding:"24px 20px 80px",overflowY:"auto",animation:"fadeIn 0.3s ease"}}>
+            <div style={{background:"#F3FAD0",borderRadius:16,padding:"14px 16px",marginBottom:20,display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:36}}>{customMode?customEmoji:selDb?.emoji}</span>
+              <div>
+                <div style={{fontSize:14,fontWeight:800,color:"#2D5000"}}>{customMode?customName:selDb?.name}</div>
+                <div style={{fontSize:12,color:"#5A7A00"}}>{customMode?"직접 입력한 식물":"선택된 식물"}</div>
+              </div>
+            </div>
+            <div style={{fontSize:14,color:"#5A7A00",marginBottom:16,fontWeight:600}}>나만의 별명을 지어주세요 ✨</div>
+            <input value={nickname} onChange={e=>setNickname(e.target.value)}
+              placeholder={"예: 초록이, "+(customMode?customName:selDb?.name)?.slice(0,3)||"몬순"+"이..."}
+              style={{width:"100%",padding:"16px 20px",borderRadius:16,border:"2px solid #D8F3DC",background:"#fff",fontSize:16,color:"#2D5000",fontFamily:"inherit",outline:"none",marginBottom:8}}/>
+            <div style={{fontSize:12,color:"#7A9A3A"}}>별명을 입력하지 않으면 식물 이름으로 등록돼요</div>
+          </div>
+        )}
+
+        {step===2&&(
+          <div style={{flex:1,padding:"24px 20px 80px",overflowY:"auto",animation:"fadeIn 0.3s ease"}}>
+            <div style={{fontSize:14,color:"#5A7A00",marginBottom:16,fontWeight:600}}>어디에 두실 예정인가요?</div>
+            {["거실 창가","침실","서재/책상","베란다","욕실","주방","현관"].map(loc=>(
+              <button key={loc} onClick={()=>setLocation(loc)} style={{width:"100%",background:location===loc?"#4A7C00":"#fff",color:location===loc?"#fff":"#2D5000",border:"2px solid",borderColor:location===loc?"#4A7C00":"#E8F2B0",borderRadius:14,padding:"15px 20px",fontSize:14,fontWeight:600,cursor:"pointer",textAlign:"left",fontFamily:"inherit",marginBottom:8,transition:"all 0.15s"}}>{loc}</button>
+            ))}
+          </div>
+        )}
+
+        {step===3&&(
+          <div style={{flex:1,padding:"24px 20px 80px",overflowY:"auto",animation:"fadeIn 0.3s ease"}}>
+            <div style={{fontSize:14,color:"#5A7A00",marginBottom:8,fontWeight:600}}>몇 일마다 물을 주시나요?</div>
+            {!customMode&&selDb&&<div style={{fontSize:12,color:"#7A9A3A",marginBottom:20}}><Mi name="lightbulb" size={14} color="#F0A500" style={{marginRight:4}} /> {selDb.name}의 권장 주기는 {selDb.water}일이에요</div>}
+            {customMode&&<div style={{fontSize:12,color:"#7A9A3A",marginBottom:20}}><Mi name="lightbulb" size={14} color="#F0A500" style={{marginRight:4}} /> 식물에 맞는 물주기 주기를 설정해주세요</div>}
+            <div style={{textAlign:"center",marginBottom:28}}>
+              <div style={{fontSize:72,fontWeight:900,color:"#2D5000"}}>{waterDays}</div>
+              <div style={{fontSize:16,color:"#5A7A00"}}>일마다 💧</div>
+            </div>
+            <input type="range" min={1} max={30} value={waterDays} onChange={e=>setWaterDays(Number(e.target.value))} style={{width:"100%",accentColor:"#4A7C00"}}/>
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:8}}>
+              <span style={{fontSize:12,color:"#7A9A3A"}}>1일</span>
+              <span style={{fontSize:12,color:"#7A9A3A"}}>30일</span>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginTop:20}}>
+              {[{d:3,label:"3일"},{d:7,label:"1주"},{d:14,label:"2주"}].map(q=>(
+                <button key={q.d} onClick={()=>setWaterDays(q.d)} style={{background:waterDays===q.d?"#4A7C00":"#F5F9E8",color:waterDays===q.d?"#fff":"#5A7A00",border:"none",borderRadius:12,padding:"10px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{q.label}</button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {step>0&&(
+        <div style={{padding:"12px 20px 28px",flexShrink:0}}>
+          <button className="bp" onClick={()=>setStep(step+1)}
+            style={{width:"100%",background:(step===2&&!location)?"#B8C880":"#4A7C00",color:"#fff",border:"none",borderRadius:20,padding:"18px",fontSize:16,fontWeight:700,cursor:(step===2&&!location)?"default":"pointer",fontFamily:"inherit"}}>
+            {step<3?"다음":"등록하기 🌱"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── CALENDAR + DIARY (MERGED) ────────────────────────────────────────────────
+function CalendarDiaryScreen({plants,diaries,waterLog,onWriteDiary,onBack}){
+  const [year,setYear]=useState(2026);
+  const [month,setMonth]=useState(4);
+  const [selDay,setSelDay]=useState(1);
+  const [diaryExpanded,setDiaryExpanded]=useState(null);
+  const [showPicker,setShowPicker]=useState(false);
+  const days=["일","월","화","수","목","금","토"];
+
+  const firstDay=new Date(year,month-1,1).getDay();
+  const daysInMonth=new Date(year,month,0).getDate();
+
+  // 월 이동
+  const prevMonth=()=>{
+    if(month===1){setYear(y=>y-1);setMonth(12);}
+    else setMonth(m=>m-1);
+    setSelDay(1);
+  };
+  const nextMonth=()=>{
+    if(month===12){setYear(y=>y+1);setMonth(1);}
+    else setMonth(m=>m+1);
+    setSelDay(1);
+  };
+
+  // 스와이프 제스처 (캘린더 영역)
+  const swipeRef=useRef(null);
+  const swipeStartX=useRef(null);
+  const handleCalTouchStart=(e)=>{swipeStartX.current=e.touches[0].clientX;};
+  const handleCalTouchEnd=(e)=>{
+    if(swipeStartX.current===null)return;
+    const dx=e.changedTouches[0].clientX-swipeStartX.current;
+    if(Math.abs(dx)>50){dx<0?nextMonth():prevMonth();}
+    swipeStartX.current=null;
+  };
+
+  const getDayStr=(day)=>year+"-"+String(month).padStart(2,"0")+"-"+String(day).padStart(2,"0");
+
+  // #4 fix: 실제 nextWater 기반으로 해당 달의 예정일 계산
+  const getPlantSchedule=()=>{
+    const schedule={};
+    plants.forEach(p=>{
+      // nextWater는 "며칠 뒤" 숫자. 2026-04 기준 1일을 today로 가정
+      const todayInMonth=1;
+      const waterDay=todayInMonth+p.nextWater;
+      if(waterDay>=1 && waterDay<=daysInMonth){
+        if(!schedule[waterDay]) schedule[waterDay]=[];
+        schedule[waterDay].push({type:"water",color:"#4A7C00",plant:p});
+      }
+      // 분갈이: repot 주기 기반 (단순 표시용)
+      const repotDay=Math.round(p.repot/30);
+      if(repotDay>=1 && repotDay<=daysInMonth){
+        if(!schedule[repotDay]) schedule[repotDay]=[];
+        schedule[repotDay].push({type:"repot",color:"#4C4CCC",plant:p});
+      }
+    });
+    return schedule;
+  };
+  const plantSchedule=getPlantSchedule();
+  const getDayDiaries=(day)=>diaries.filter(d=>d.calDate===getDayStr(day));
+  const selDiaries=getDayDiaries(selDay);
+
+  const selEvents=[
+    {emoji:"💧",plant:"칼라데아 마코야나",label:"물주기",time:"오전 9:00",urgent:true,member:"👩 엄마"},
+    {emoji:"🌿",plant:"몬스테라 델리시오사",label:"물주기 D-2",time:"오전 9:00",urgent:false,member:null},
+    {emoji:"🌵",plant:"스투키",label:"흙 점검",time:"오전 10:00",urgent:false,member:"🧒 남동생"},
+  ];
+
+  // picker용 연/월 범위
+  const PICKER_YEARS=Array.from({length:6},(_,i)=>2023+i);
+  const PICKER_MONTHS=Array.from({length:12},(_,i)=>i+1);
+
+  return(
+    <div style={{height:"100%",minHeight:0,display:"flex",flexDirection:"column",background:"#F5F9E8",position:"relative"}}>
+      {/* Header — flexShrink:0 ensures it never pushes BottomNav */}
+      <div style={{background:"#2D5000",padding:"16px 20px 16px",flexShrink:0}}>
+        <button onClick={onBack} className="bp" style={{background:"none",border:"none",color:"#1A2E00",fontSize:13,fontWeight:600,cursor:"pointer",lineHeight:1,padding:"0",marginBottom:16,display:"flex",alignItems:"center",gap:4}}>
+          <Mi name="arrow_back_ios_new" size={22} color="rgba(255,255,255,0.9)" />
+        </button>
+        <div style={{color:"rgba(255,255,255,0.7)",fontSize:11,fontWeight:700,letterSpacing:1.5,marginBottom:6}}>CALENDAR & DIARY</div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          {/* 연/월 토글 버튼만 — 화살표 없음 */}
+          <button onClick={()=>setShowPicker(v=>!v)} style={{background:"none",border:"none",color:"#fff",fontSize:22,fontWeight:800,cursor:"pointer",fontFamily:"inherit",padding:0,display:"flex",alignItems:"center",gap:6}}>
+            {year}년 {month}월
+            <span style={{fontSize:14,color:"#7A9A3A",fontWeight:400}}>{showPicker?"▲":"▼"}</span>
+          </button>
+          <button onClick={()=>onWriteDiary(getDayStr(selDay))} className="bp" style={{background:"#D4F06E",color:"#2D5000",border:"none",borderRadius:14,padding:"8px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}><span style={{display:"flex",alignItems:"center",gap:4}}><Mi name="edit_note" size={15} />일기 쓰기</span></button>
+        </div>
+
+        {/* 연/월 퀵 피커 */}
+        {showPicker&&(
+          <div style={{marginTop:12,animation:"slideDown 0.2s ease"}}>
+            <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap"}}>
+              {PICKER_YEARS.map(y=>(
+                <button key={y} onClick={()=>{setYear(y);setSelDay(1);}} style={{background:year===y?"#D4F06E":"#F5F9E8",color:year===y?"#2D5000":"#7A9A3A",border:"none",borderRadius:10,padding:"5px 12px",fontSize:12,fontWeight:year===y?700:400,cursor:"pointer",fontFamily:"inherit"}}>
+                  {y}
+                </button>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+              {PICKER_MONTHS.map(m=>(
+                <button key={m} onClick={()=>{setMonth(m);setSelDay(1);setShowPicker(false);}} style={{background:month===m?"#D4F06E":"#F5F9E8",color:month===m?"#2D5000":"#7A9A3A",border:"none",borderRadius:10,padding:"5px 10px",fontSize:12,fontWeight:month===m?700:400,cursor:"pointer",fontFamily:"inherit",minWidth:36}}>
+                  {m}월
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 스와이프 좌우 이동 힌트 (피커 열려있을 때 숨김) */}
+      {!showPicker&&(
+        <div style={{background:"#2D5000",padding:"0 20px 10px",flexShrink:0,display:"flex",gap:20,alignItems:"center"}}>
+          <button onClick={prevMonth} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:20,padding:"4px 14px",color:"#fff",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}><Mi name="chevron_left" size={20} color="#5A7A00" /></button>
+          <button onClick={nextMonth} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:20,padding:"4px 14px",color:"#fff",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}><Mi name="chevron_right" size={20} color="#5A7A00" /></button>
+        </div>
+      )}
+
+      <div style={{flex:1,overflowY:"auto",paddingBottom:80}}>
+        {/* Calendar — swipe to change month */}
+        <div
+          ref={swipeRef}
+          onTouchStart={handleCalTouchStart}
+          onTouchEnd={handleCalTouchEnd}
+          style={{background:"#fff",margin:"12px 16px 0",borderRadius:20,padding:"14px 12px",boxShadow:"0 2px 8px rgba(0,0,0,0.05)",userSelect:"none"}}
+        >
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:6}}>
+            {days.map(d=><div key={d} style={{textAlign:"center",fontSize:11,color:"#7A9A3A",fontWeight:600,padding:"3px 0"}}>{d}</div>)}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}}>
+            {Array.from({length:firstDay}).map((_,i)=><div key={"e"+i}/>)}
+            {Array.from({length:daysInMonth}).map((_,i)=>{
+              const day=i+1;
+              const events=plantSchedule[day]||[];
+              const dd=getDayDiaries(day);
+              const isSel=day===selDay;
+              return(
+                <button key={day} onClick={()=>{setSelDay(day);setShowPicker(false);}} style={{aspectRatio:1,borderRadius:"50%",border:"none",background:isSel?"#4A7C00":"transparent",color:isSel?"#fff":"#2D5000",fontSize:13,fontWeight:isSel?700:400,cursor:"pointer",fontFamily:"inherit",position:"relative",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:1}}>
+                  <span>{day}</span>
+                  {(events.length>0||dd.length>0)&&(
+                    <div style={{display:"flex",gap:1,position:"absolute",bottom:3}}>
+                      {events.slice(0,1).map((e,ei)=><div key={"e"+ei} style={{width:4,height:4,borderRadius:"50%",background:isSel?"#C8E85A":e.color}}/>)}
+                      {dd.length>0&&<div style={{width:4,height:4,borderRadius:"50%",background:isSel?"#FFD700":"#F59E0B"}}/>}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {/* Legend */}
+          <div style={{display:"flex",gap:12,marginTop:10,padding:"6px 4px 0",borderTop:"1px solid #F0F7EE"}}>
+            <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:8,height:8,borderRadius:"50%",background:"#4A7C00"}}/><span style={{fontSize:10,color:"#7A9A3A"}}>일정</span></div>
+            <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:8,height:8,borderRadius:"50%",background:"#F59E0B"}}/><span style={{fontSize:10,color:"#7A9A3A"}}>일기</span></div>
+            <div style={{flex:1,textAlign:"right"}}><span style={{fontSize:10,color:"#C4D4CA"}}>← 스와이프로 월 이동</span></div>
+          </div>
+        </div>
+
+        {/* Selected day label */}
+        <div style={{padding:"16px 20px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{fontSize:15,fontWeight:800,color:"#2D5000"}}>{year}년 {month}월 {selDay}일</div>
+          <button onClick={()=>onWriteDiary(getDayStr(selDay))} style={{background:"none",border:"none",fontSize:12,color:"#5A7A00",cursor:"pointer",fontFamily:"inherit"}}>+ 일기 추가</button>
+        </div>
+
+        {/* Schedule events */}
+        <div style={{padding:"0 16px",marginTop:4}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#7A9A3A",marginBottom:10,padding:"0 4px"}}>🗓 일정</div>
+          {selEvents.map((e,i)=>(
+            <div key={i} style={{background:"#fff",borderRadius:16,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,boxShadow:"0 2px 10px rgba(0,0,0,0.06)",marginBottom:10,animation:"fadeIn 0.3s ease "+i*0.05+"s both"}}>
+              <span style={{fontSize:26}}>{e.emoji}</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:700,color:"#2D5000"}}>{e.plant}</div>
+                <div style={{fontSize:11,color:"#5A7A00",marginTop:2}}>{e.label} · {e.time}{e.member?" · "+e.member:""}</div>
+              </div>
+              {e.urgent&&<button className="bp" style={{background:"#4A7C00",color:"#fff",border:"none",borderRadius:10,padding:"8px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>완료</button>}
+            </div>
+          ))}
+        </div>
+
+        {/* Diary entries */}
+        <div style={{padding:"12px 16px 24px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,padding:"0 4px"}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#7A9A3A"}}>📝 이 날의 일기 {selDiaries.length>0?"("+selDiaries.length+")":""}</div>
+          </div>
+          {selDiaries.length===0?(
+            <button onClick={()=>onWriteDiary(getDayStr(selDay))} style={{width:"100%",background:"transparent",border:"2px dashed #B7E4C7",borderRadius:16,padding:"20px",textAlign:"center",cursor:"pointer",fontFamily:"inherit"}}>
+              <div style={{fontSize:28,marginBottom:8}}>📝</div>
+              <div style={{fontSize:13,color:"#7A9A3A"}}>오늘의 식물 이야기를 기록해보세요</div>
+            </button>
+          ):(
+            selDiaries.map((entry,i)=>{
+              const plant=plants.find(p=>p.id===entry.plantId);
+              const isExp=diaryExpanded===entry.id;
+              return(
+                <div key={entry.id} style={{background:"#fff",borderRadius:18,padding:18,marginBottom:10,boxShadow:"0 3px 12px rgba(0,0,0,0.06)",animation:"fadeIn 0.3s ease "+i*0.08+"s both"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:isExp?12:0}}>
+                    <span style={{fontSize:24}}>{entry.memberAvatar}</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:13,fontWeight:700,color:"#4A7C00"}}>{entry.memberName}</div>
+                      {plant&&<div style={{fontSize:11,color:"#7A9A3A"}}>{plant.emoji} {plant.nickname}</div>}
+                    </div>
+                    <button onClick={()=>setDiaryExpanded(isExp?null:entry.id)} style={{background:"none",border:"none",fontSize:16,cursor:"pointer",color:"#7A9A3A",padding:4}}>
+                      {isExp?"▲":"▼"}
+                    </button>
+                  </div>
+                  <div style={{fontSize:14,fontWeight:700,color:"#2D5000",marginTop:isExp?0:8}}>{entry.title}</div>
+                  {isExp&&<div style={{fontSize:13,color:"#5A7A00",lineHeight:1.6,marginTop:8}}>{entry.content}</div>}
+                  {isExp&&entry.photos&&entry.photos.length>0&&(
+                    <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
+                      {entry.photos.map((ph,pi)=>(
+                        <img key={pi} src={ph.dataUrl} alt="" style={{width:80,height:80,borderRadius:12,objectFit:"cover",boxShadow:"0 2px 8px rgba(0,0,0,0.10)"}}/>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+          {selDiaries.length===0&&diaries.length>0&&(
+            <div style={{marginTop:16}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#7A9A3A",marginBottom:10,padding:"0 4px"}}>📖 최근 일기</div>
+              {diaries.slice(0,3).map((entry,i)=>{
+                const plant=plants.find(p=>p.id===entry.plantId);
+                return(
+                  <div key={entry.id} style={{background:"#fff",borderRadius:16,padding:"14px 16px",marginBottom:8,display:"flex",gap:10,boxShadow:"0 1px 4px rgba(0,0,0,0.04)",animation:"fadeIn 0.3s ease "+i*0.06+"s both"}}>
+                    <span style={{fontSize:24}}>{entry.memberAvatar}</span>
+                    <div style={{flex:1}}>
+                      <div style={{display:"flex",justifyContent:"space-between"}}>
+                        <div style={{fontSize:13,fontWeight:700,color:"#2D5000"}}>{entry.title}</div>
+                        <div style={{fontSize:11,color:"#B8C880"}}>{entry.calDate?.slice(5).replace("-",".")}</div>
+                      </div>
+                      <div style={{fontSize:11,color:"#7A9A3A",marginTop:2}}>{entry.memberName} · {plant?.emoji} {plant?.nickname}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── DIARY WRITE ──────────────────────────────────────────────────────────────
+function DiaryWriteScreen({plants,prefillDate,onBack,onSave}){
+  const [title,setTitle]=useState("");
+  const [content,setContent]=useState("");
+  const [selPlant,setSelPlant]=useState(null);
+  const [condition,setCondition]=useState("");
+  const [photos,setPhotos]=useState([]);
+  const fileRef=useRef();
+
+  const handlePhotoAdd=(e)=>{
+    const files=Array.from(e.target.files);
+    files.forEach(file=>{
+      const reader=new FileReader();
+      reader.onload=(ev)=>{
+        setPhotos(prev=>[...prev,{id:Date.now()+Math.random(),dataUrl:ev.target.result}]);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value="";
+  };
+
+  const removePhoto=(id)=>setPhotos(prev=>prev.filter(p=>p.id!==id));
+
+  const handleSave=()=>{
+    onSave({
+      plantId:selPlant,
+      memberId:1,memberName:"나 (김민지)",memberAvatar:"🧑‍🌾",
+      calDate:prefillDate||"2025-03-02",
+      title:title||"새 일기",
+      content,
+      mood:condition||"🌿",
+      photos
+    });
+  };
+
+  return(
+    <div style={{height:"100%",minHeight:0,display:"flex",flexDirection:"column",background:"#F5F9E8",position:"relative"}}>
+      {/* 헤더 — 뒤로가기 + 저장 */}
+      <div style={{background:"#2D5000",padding:"16px 20px 20px",flexShrink:0}}>
+        <button onClick={onBack} className="bp" style={{background:"none",border:"none",color:"rgba(255,255,255,0.85)",fontSize:13,fontWeight:600,cursor:"pointer",lineHeight:1,padding:"0",marginBottom:16,display:"flex",alignItems:"center",gap:4}}>
+          <Mi name="arrow_back_ios_new" size={22} color="rgba(255,255,255,0.9)" />
+        </button>
+        <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between"}}>
+          <div>
+            <div style={{color:"rgba(255,255,255,0.7)",fontSize:11,fontWeight:700,letterSpacing:1.5,marginBottom:6}}>DIARY</div>
+            <div style={{color:"#fff",fontSize:24,fontWeight:800,lineHeight:1.15}}>일기 쓰기 📝</div>
+          </div>
+          <button onClick={handleSave} className="bp" style={{background:"#D4F06E",color:"#2D5000",border:"none",borderRadius:14,padding:"8px 16px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>저장</button>
+        </div>
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"20px 20px 80px"}}>
+        {/* 식물 선택 */}
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:13,color:"#5A7A00",marginBottom:8,fontWeight:600}}>어떤 식물 이야기인가요?</div>
+          <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:4}}>
+            {plants.map(p=><button key={p.id} onClick={()=>setSelPlant(p.id)} style={{background:selPlant===p.id?"#4A7C00":"#fff",color:selPlant===p.id?"#fff":"#2D5000",border:"2px solid",borderColor:selPlant===p.id?"#4A7C00":"#E8F2B0",borderRadius:20,padding:"8px 14px",fontSize:13,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",fontWeight:600}}>{p.emoji} {p.nickname}</button>)}
+          </div>
+        </div>
+        {/* 식물 컨디션 */}
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:13,color:"#5A7A00",marginBottom:10,fontWeight:600}}>오늘 식물의 컨디션은?</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            {[
+              {v:"최고",emoji:"🌟",color:"#FFD700",bg:"#FFFBEA"},
+              {v:"좋아요",emoji:"🌿",color:"#6AAF00",bg:"#F3FAD0"},
+              {v:"보통",emoji:"🍂",color:"#F0A500",bg:"#FFF8E0"},
+              {v:"걱정돼요",emoji:"🥀",color:"#E85555",bg:"#FFF0F0"},
+            ].map(c=>(
+              <button key={c.v} onClick={()=>setCondition(c.v)} style={{background:condition===c.v?c.bg:"#fff",border:"2px solid "+condition===c.v?c.color:"#E8F2B0",borderRadius:14,padding:"12px 8px",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:8,transition:"all 0.15s"}}>
+                <span style={{fontSize:22}}>{c.emoji}</span>
+                <span style={{fontSize:13,fontWeight:700,color:condition===c.v?c.color:"#7A9A3A"}}>{c.v}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* 제목 */}
+        <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="제목을 입력하세요" style={{width:"100%",padding:"14px 16px",borderRadius:14,border:"2px solid #E0EEE4",background:"#fff",fontSize:15,fontWeight:700,color:"#2D5000",fontFamily:"inherit",outline:"none",marginBottom:12}}/>
+        {/* 내용 */}
+        <textarea value={content} onChange={e=>setContent(e.target.value)} placeholder="오늘 식물의 이야기를 써보세요..." rows={5} style={{width:"100%",padding:"14px 16px",borderRadius:14,border:"2px solid #E0EEE4",background:"#fff",fontSize:14,color:"#2D5000",fontFamily:"inherit",outline:"none",resize:"none",lineHeight:1.7,marginBottom:14}}/>
+        {/* 사진 추가 */}
+        <div style={{marginBottom:8}}>
+          <div style={{fontSize:13,color:"#5A7A00",marginBottom:10,fontWeight:600}}>📷 사진 추가</div>
+          <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+            {photos.map(ph=>(
+              <div key={ph.id} style={{position:"relative",width:88,height:88,borderRadius:14,overflow:"hidden",flexShrink:0,boxShadow:"0 2px 8px rgba(0,0,0,0.10)"}}>
+                <img src={ph.dataUrl} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                <button onClick={()=>removePhoto(ph.id)} style={{position:"absolute",top:4,right:4,width:22,height:22,background:"rgba(0,0,0,0.55)",border:"none",borderRadius:"50%",color:"#fff",fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>✕</button>
+              </div>
+            ))}
+            {photos.length<5&&(
+              <button onClick={()=>fileRef.current.click()} className="bp" style={{width:88,height:88,borderRadius:14,border:"2px dashed #95D5B2",background:"#F8FCF8",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,cursor:"pointer",flexShrink:0}}>
+                <span style={{fontSize:26,color:"#8DB800"}}><Mi name="photo_camera" size={22} color="#5A7A00" /></span>
+                <span style={{fontSize:10,color:"#7A9A3A",fontWeight:600}}>추가</span>
+              </button>
+            )}
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={handlePhotoAdd}/>
+          {photos.length>0&&<div style={{fontSize:11,color:"#B8C880",marginTop:6}}>{photos.length}/5장 · 탭해서 삭제</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SHOP ─────────────────────────────────────────────────────────────────────
+function ShopScreen({items,cartCount,onAdd,onBack}){
+  return(
+    <div style={{height:"100%",minHeight:0,display:"flex",flexDirection:"column",background:"#F5F9E8",position:"relative"}}>
+      <ScreenHeader onBack={onBack} sub="PLANT SHOP" label="식물 상점" bg="#2D5000" dark={true} right={<button className="bp" style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:12,padding:"7px 14px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5}}><Mi name="shopping_cart" size={17} color="#fff" />장바구니{cartCount>0&&<span style={{background:"#E4FF66",color:"#1A2E00",borderRadius:"50%",width:18,height:18,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,marginLeft:2}}>{cartCount}</span>}</button>} />
+      <div style={{flex:1,overflowY:"auto",padding:"16px 20px 80px"}}>
+        <div style={{background:"#F0FFCC",borderRadius:20,padding:"20px",marginBottom:20,border:"1px solid #C8E85A",display:"flex",alignItems:"center",gap:16}}>
+          <div>
+            <div style={{color:"#5A7A00",fontSize:12,marginBottom:4}}>🌸 봄맞이 특가</div>
+            <div style={{color:"#2D5000",fontSize:18,fontWeight:800}}>배합토 최대 30% 할인</div>
+            <div style={{color:"#5A7A00",fontSize:12,marginTop:4}}>~3월 31일까지</div>
+          </div>
+          <div style={{fontSize:56,marginLeft:"auto"}}>🌺</div>
+        </div>
+        <div style={{fontSize:14,fontWeight:700,color:"#2D5000",marginBottom:12}}>추천 상품</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+          {items.map((item,i)=>(
+            <div key={item.id} style={{background:"#fff",borderRadius:20,padding:"16px",boxShadow:"0 2px 8px rgba(0,0,0,0.05)",animation:"fadeIn 0.3s ease "+i*0.05+"s both"}}>
+              {item.tag&&<span style={{background:item.tagColor,color:"#fff",borderRadius:8,padding:"2px 8px",fontSize:10,fontWeight:700,display:"inline-block",marginBottom:8}}>{item.tag}</span>}
+              <div style={{fontSize:40,textAlign:"center",margin:"8px 0 12px"}}>{item.emoji}</div>
+              <div style={{fontSize:13,fontWeight:700,color:"#2D5000",marginBottom:4}}>{item.name}</div>
+              <div style={{fontSize:14,fontWeight:800,color:"#4A7C00",marginBottom:12}}>₩{item.price}</div>
+              <button onClick={onAdd} className="bp" style={{width:"100%",background:"#4A7C00",color:"#fff",border:"none",borderRadius:12,padding:"10px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>담기</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function ContentFeedScreen({onBack,savedPosts,onToggleSave,onPost}){
+  const [filter,setFilter]=useState("전체");
+  const tags=["전체","케어팁","인테리어","성장기록","가드닝"];
+  const filtered=filter==="전체"?CONTENT_POSTS:CONTENT_POSTS.filter(p=>p.tag===filter);
+
+  return(
+    <div style={{height:"100%",minHeight:0,display:"flex",flexDirection:"column",background:"#F5F9E8",position:"relative"}}>
+      <div style={{background:"#F5F9E8",padding:"16px 20px 20px",flexShrink:0}}>
+        <button onClick={onBack} className="bp" style={{background:"none",border:"none",color:"rgba(255,255,255,0.85)",fontSize:13,fontWeight:600,cursor:"pointer",lineHeight:1,padding:"0",marginBottom:16,display:"flex",alignItems:"center",gap:4}}>
+          <Mi name="arrow_back_ios_new" size={22} color="#1A2E00" />
+        </button>
+        <div style={{color:"#7A9A3A",fontSize:11,fontWeight:700,letterSpacing:1.5,marginBottom:6}}>PLANT CONTENT</div>
+        <div style={{color:"#2D5000",fontSize:24,fontWeight:800,lineHeight:1.15,marginBottom:0}}>식물 콘텐츠 🌿</div>
+        <div style={{display:"flex",gap:8,marginTop:14,overflowX:"auto",paddingBottom:4}}>
+          {tags.map(t=>(
+            <button key={t} onClick={()=>setFilter(t)} style={{flexShrink:0,background:filter===t?"#1A2E00":"rgba(0,0,0,0.06)",color:filter===t?"#fff":"#888",border:"none",borderRadius:20,padding:"6px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{t}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{flex:1,overflowY:"auto",padding:"16px 20px 80px"}}>
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {filtered.map((post,i)=>{
+            const isSaved=savedPosts.includes(post.id);
+            return(
+              <div key={post.id} onClick={()=>onPost(post)} style={{background:"#fff",borderRadius:20,overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,0.06)",animation:"fadeIn 0.3s ease "+i*0.05+"s both",display:"flex",cursor:"pointer",minHeight:110}}>
+                {/* 왼쪽 이미지 박스 */}
+                <div style={{width:110,height:110,background:post.bg,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:52,position:"relative"}}>
+                  {post.emoji}
+                  <div style={{position:"absolute",bottom:6,left:6,background:"rgba(255,255,255,0.9)",borderRadius:20,padding:"2px 8px",fontSize:9,fontWeight:700,color:post.color}}>{post.tag}</div>
+                </div>
+                {/* 오른쪽 콘텐츠 */}
+                <div style={{flex:1,padding:"14px 14px 10px",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
+                  <div>
+                    <div style={{fontSize:14,fontWeight:800,color:"#1A2E00",marginBottom:4,lineHeight:1.35}}>{post.title}</div>
+                    <div style={{fontSize:12,color:"#7A9A3A",lineHeight:1.5}}>{post.desc}</div>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:8}}>
+                    <span style={{display:"inline-flex",alignItems:"center",gap:3,fontSize:11,color:"#B8C880"}}>
+                      <Mi name="favorite" size={12} color="#FF6B6B" />{post.likes}
+                    </span>
+                    <button onClick={e=>{e.stopPropagation();onToggleSave(post.id);}} style={{background:isSaved?"#E4FF66":"#F5F9E8",border:"none",borderRadius:20,padding:"4px 10px",display:"flex",alignItems:"center",gap:3,cursor:"pointer",fontSize:11,fontWeight:700,color:isSaved?"#1A2E00":"#7A9A3A"}}>
+                      <Mi name={isSaved?"bookmark":"bookmark_border"} size={13} color={isSaved?"#1A2E00":"#7A9A3A"} />
+                      {isSaved?"저장됨":"저장"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {filtered.length===0&&(
+          <div style={{textAlign:"center",padding:"60px 20px",color:"#7A9A3A"}}>
+            <div style={{fontSize:40,marginBottom:12}}>🌱</div>
+            <div style={{fontSize:14}}>해당 카테고리 콘텐츠가 없어요</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── CONTENT DETAIL ───────────────────────────────────────────────────────────
+function ContentDetailScreen({post,onBack,savedPosts,onToggleSave}){
+  const isSaved=savedPosts.includes(post.id);
+  return(
+    <div style={{height:"100%",minHeight:0,overflowY:"auto",background:"#fff",paddingBottom:80}}>
+      {/* 상단 이미지 영역 */}
+      <div style={{position:"relative",width:"100%",paddingTop:"100%",background:post.bg,flexShrink:0}}>
+        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:120}}>{post.emoji}</div>
+        {/* 뒤로가기 */}
+        <button onClick={onBack} className="bp" style={{position:"absolute",top:14,left:14,width:36,height:36,borderRadius:"50%",background:"rgba(255,255,255,0.88)",border:"none",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.15)"}}>  <Mi name="arrow_back_ios_new" size={16} color="#2D5000" /></button>
+        {/* 저장 버튼 */}
+        <button onClick={()=>onToggleSave(post.id)} className="bp" style={{position:"absolute",top:14,right:14,width:36,height:36,borderRadius:"50%",background:"rgba(255,255,255,0.88)",border:"none",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.15)"}}>
+          <Mi name={isSaved?"bookmark":"bookmark_border"} size={17} color={isSaved?"#4A7C00":"#7A9A3A"} />
+        </button>
+        {/* 태그 */}
+        <div style={{position:"absolute",bottom:14,left:14,background:"rgba(255,255,255,0.88)",borderRadius:20,padding:"4px 12px",fontSize:11,fontWeight:700,color:post.color}}>{post.tag}</div>
+      </div>
+
+      {/* 본문 */}
+      <div style={{padding:"24px 20px 100px"}}>
+        {/* 작성자 */}
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,justifyContent:"flex-end"}}>
+          <div style={{marginLeft:"auto",display:"flex",gap:14,alignItems:"center"}}>
+            <span style={{fontSize:12,color:"#7A9A3A"}}><span style={{display:"inline-flex",alignItems:"center",gap:2}}><Mi name="favorite" size={11} color="#FF6B6B" />{post.likes}</span></span>
+            <span style={{fontSize:12,color:isSaved?"#4A7C00":"#7A9A3A",fontWeight:isSaved?700:400}}><Mi name={isSaved?"bookmark":"bookmark_border"} size={14} color={isSaved?"#4A7C00":"#7A9A3A"} /> {post.saves+(isSaved?1:0)}</span>
+          </div>
+        </div>
+
+        {/* 제목 */}
+        <div style={{fontSize:22,fontWeight:900,color:"#2D5000",lineHeight:1.3,marginBottom:8}}>{post.title}</div>
+        <div style={{fontSize:14,color:"#7A9A3A",marginBottom:24,lineHeight:1.5}}>{post.desc}</div>
+
+        {/* 본문 블록 */}
+        {post.body && post.body.map((block,i)=>{
+          if(block.type==="heading") return(
+            <div key={i} style={{fontSize:16,fontWeight:800,color:"#2D5000",marginTop:20,marginBottom:10,lineHeight:1.4}}>{block.text}</div>
+          );
+          if(block.type==="tip") return(
+            <div key={i} style={{background:"#F3FAD0",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+              <div style={{fontSize:11,fontWeight:700,color:"#4A7C00",marginBottom:5}}><Mi name="lightbulb" size={14} color="#4A7C00" style={{marginRight:4}} /> {block.label}</div>
+              <div style={{fontSize:13,color:"#2D5000",lineHeight:1.7}}>{block.text}</div>
+            </div>
+          );
+          return(
+            <div key={i} style={{fontSize:14,color:"#5A7A00",lineHeight:1.8,marginBottom:14}}>{block.text}</div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
+function NotificationsScreen({items,onBack}){
+  return(
+    <div style={{height:"100%",minHeight:0,overflowY:"auto",background:"#F5F9E8",paddingBottom:80,position:"relative"}}>
+      <ScreenHeader onBack={onBack} sub="ALERT" label="알림" bg="#2D5000" dark={true} />
+      <div style={{padding:"16px 20px"}}>
+        <div style={{fontSize:12,color:"#7A9A3A",fontWeight:600,marginBottom:8}}>오늘</div>
+        {items.filter(n=>n.urgent).map((n,i)=>(
+          <div key={n.id} style={{background:"#fff",borderRadius:16,padding:"16px",marginBottom:10,display:"flex",alignItems:"center",gap:12,boxShadow:"0 1px 4px rgba(0,0,0,0.04)",animation:"fadeIn 0.3s ease "+i*0.05+"s both"}}>
+            <div style={{fontSize:36}}>{n.emoji}</div>
+            <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,color:"#2D5000"}}>{n.plant}</div><div style={{fontSize:12,color:"#5A7A00",marginTop:2}}>{n.msg}</div><div style={{fontSize:11,color:"#B8C880",marginTop:4}}>{n.time}</div></div>
+            <button className="bp" style={{background:"#4A7C00",color:"#fff",border:"none",borderRadius:10,padding:"8px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>완료</button>
+          </div>
+        ))}
+        <div style={{fontSize:12,color:"#7A9A3A",fontWeight:600,margin:"16px 0 8px"}}>이전</div>
+        {items.filter(n=>!n.urgent).map(n=>(
+          <div key={n.id} style={{background:"#fff",borderRadius:16,padding:"16px",marginBottom:10,display:"flex",alignItems:"center",gap:12,opacity:0.7,boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+            <div style={{fontSize:36}}>{n.emoji}</div>
+            <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,color:"#2D5000"}}>{n.plant}</div><div style={{fontSize:12,color:"#5A7A00",marginTop:2}}>{n.msg}</div><div style={{fontSize:11,color:"#B8C880",marginTop:4}}>{n.time}</div></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── MYPAGE ───────────────────────────────────────────────────────────────────
+function MyPageScreen({members,FC,IL,waterLog,plants,myAvatar,onAvatarChange,myNickname,onNicknameChange,onFamily,onJoin,onBack}){
+  const me=members[0];
+  const myLog=waterLog.filter(l=>l.memberId===1);
+  const [copied,setCopied]=useState(false);
+  const [showEmojiPicker,setShowEmojiPicker]=useState(false);
+  const [editingNick,setEditingNick]=useState(false);
+  const [nickDraft,setNickDraft]=useState(myNickname);
+  const AVATAR_OPTIONS=["🧑‍🌾","👩","👨","🧒","👶","🧔","👩‍🦰","👩‍🦱","👩‍🦳","👴","👵","🧑","🐱","🐶","🦊","🐨","🐼","🌸","🌟","🍀"];
+  return(
+    <div style={{height:"100%",minHeight:0,overflowY:"auto",background:"#F5F9E8",paddingBottom:80,position:"relative"}}>
+      <div style={{background:"#F5F9E8",padding:"20px 24px 48px",position:"relative"}}>
+        <div style={{position:"absolute",bottom:-40,right:-20,fontSize:180,opacity:0.05}}>🌿</div>
+        <button onClick={onBack} className="bp" style={{background:"none",border:"none",color:"#5A7A00",fontSize:13,fontWeight:600,cursor:"pointer",lineHeight:1,padding:"0",marginBottom:16,display:"flex",alignItems:"center",gap:4}}>
+          <Mi name="arrow_back_ios_new" size={22} color="#1A2E00" />
+        </button>
+        <div style={{color:"#7A9A3A",fontSize:11,fontWeight:700,letterSpacing:1.5,marginBottom:12}}>MY PAGE</div>
+        <div style={{display:"flex",alignItems:"center",gap:16}}>
+          {/* 아바타 */}
+          <div style={{position:"relative",flexShrink:0}}>
+            <button onClick={()=>setShowEmojiPicker(v=>!v)} style={{width:72,height:72,borderRadius:"50%",background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:40,border:"3px solid rgba(255,255,255,0.3)",cursor:"pointer",position:"relative"}}>
+              {myAvatar}
+              <div style={{position:"absolute",bottom:0,right:0,width:22,height:22,background:"#8DB800",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,border:"2px solid #1B4332"}}><Mi name="edit" size={14} color="#2D5000" /></div>
+            </button>
+          </div>
+          <div style={{flex:1}}>
+            <div style={{color:"#2D5000",fontSize:22,fontWeight:800}}>{me.name}</div>
+            <div style={{color:"#1A2E00",fontSize:12,marginTop:2,fontWeight:600}}>가족 정원 관리자</div>
+            {/* 닉네임 편집 */}
+            {editingNick ? (
+              <div style={{display:"flex",alignItems:"center",gap:6,marginTop:8}}>
+                <input
+                  value={nickDraft}
+                  onChange={e=>setNickDraft(e.target.value)}
+                  onKeyDown={e=>{if(e.key==="Enter"){onNicknameChange(nickDraft.trim());setEditingNick(false);}}}
+                  placeholder="닉네임 입력"
+                  maxLength={12}
+                  autoFocus
+                  style={{background:"#fff",border:"1.5px solid #C8E85A",borderRadius:10,padding:"5px 10px",fontSize:13,color:"#1A2E00",fontFamily:"inherit",outline:"none",width:130}}
+                />
+                <button onClick={()=>{onNicknameChange(nickDraft.trim());setEditingNick(false);}} style={{background:"#D4F06E",border:"none",color:"#2D5000",borderRadius:8,padding:"5px 10px",color:"#2D5000",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>저장</button>
+                <button onClick={()=>setEditingNick(false)} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:8,padding:"5px 8px",color:"#5A7A00",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>취소</button>
+              </div>
+            ) : (
+              <div style={{display:"flex",alignItems:"center",gap:6,marginTop:8}}>
+                {myNickname ? (
+                  <span style={{background:"rgba(255,255,255,0.2)",color:"#1A2E00",borderRadius:20,padding:"3px 12px",fontSize:12,fontWeight:700}}>@{myNickname}</span>
+                ) : (
+                  <span style={{color:"#5A7A00",fontSize:12}}>커뮤니티 닉네임 없음</span>
+                )}
+                <button onClick={()=>{setNickDraft(myNickname);setEditingNick(true);}} style={{background:"none",border:"none",color:"#7A9A3A",fontSize:13,cursor:"pointer",padding:0}}><Mi name="edit" size={16} color="rgba(255,255,255,0.5)" /></button>
+              </div>
+            )}
+            <div style={{display:"inline-block",background:"#D4F06E",color:"#2D5000",borderRadius:20,padding:"3px 12px",fontSize:11,fontWeight:700,marginTop:8}}><span style={{display:"flex",alignItems:"center",gap:4}}><Mi name="workspace_premium" size={13} color="inherit" />Owner</span></div>
+          </div>
+        </div>
+        {/* 이모지 피커 — 헤더 내부 아래에 인라인으로 */}
+        {showEmojiPicker&&(
+          <div style={{background:"rgba(255,255,255,0.12)",backdropFilter:"blur(10px)",borderRadius:20,padding:14,marginTop:16,animation:"fadeIn 0.2s ease",border:"1px solid rgba(255,255,255,0.2)"}}>
+            <div style={{fontSize:11,color:"#7A9A3A",fontWeight:700,marginBottom:10}}>아바타 선택</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+              {AVATAR_OPTIONS.map(em=>(
+                <button key={em} onClick={()=>{onAvatarChange(em);setShowEmojiPicker(false);}} style={{width:40,height:40,borderRadius:10,border:"2px solid "+myAvatar===em?"#fff":"transparent",background:myAvatar===em?"rgba(255,255,255,0.25)":"rgba(255,255,255,0.1)",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{em}</button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      <div style={{padding:"0 20px 80px",marginTop:-24}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:20}}>
+          {[{label:"총 물주기",value:myLog.filter(l=>l.action==="물주기").length+"회",emoji:"💧"},{label:"일기 작성",value:"2개",emoji:"📝"},{label:"함께한 날",value:"91일",emoji:"🌱"}].map((s,i)=>(
+            <div key={i} style={{background:"#fff",borderRadius:16,padding:"14px 8px",textAlign:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.06)",animation:"fadeIn 0.3s ease "+i*0.05+"s both"}}>
+              <div style={{fontSize:22}}>{s.emoji}</div>
+              <div style={{fontSize:20,fontWeight:800,color:"#2D5000",marginTop:4}}>{s.value}</div>
+              <div style={{fontSize:10,color:"#7A9A3A"}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{background:"#fff",borderRadius:24,padding:20,marginBottom:16,boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+            <div><div style={{fontSize:15,fontWeight:800,color:"#2D5000"}}>👨‍👩‍👧 우리 가족 정원</div><div style={{fontSize:12,color:"#7A9A3A",marginTop:2}}>{members.length}명이 함께 키우고 있어요</div></div>
+            <button onClick={onFamily} className="bp" style={{background:"#F3FAD0",color:"#4A7C00",border:"none",borderRadius:12,padding:"8px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}><span style={{display:"flex",alignItems:"center",gap:2}}>관리 <Mi name="chevron_right" size={14} color="inherit" /></span></button>
+          </div>
+          <div style={{display:"flex",gap:10}}>
+            {members.map(m=>(
+              <div key={m.id} style={{flex:1,background:"#F5F9E8",borderRadius:14,padding:"12px 8px",textAlign:"center"}}>
+                <div style={{fontSize:30}}>{m.avatar}</div>
+                <div style={{fontSize:11,fontWeight:700,color:"#2D5000",marginTop:6}}>{m.name.split(" ")[0]}</div>
+                {m.role==="owner"&&<div style={{fontSize:10,color:"#8DB800"}}>👑</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{background:"linear-gradient(135deg,#C8E85A,#D4F06E)",borderRadius:24,padding:22,marginBottom:16}}>
+          <div style={{color:"#1A2E00",fontSize:13,fontWeight:800,marginBottom:6}}>🔗 가족 초대하기</div>
+          <div style={{color:"#2D5000",fontSize:13,marginBottom:18,lineHeight:1.5}}>코드 또는 링크를 공유하면 같은 정원에서 함께 관리해요</div>
+          <div style={{background:"rgba(255,255,255,0.85)",borderRadius:16,padding:"12px 16px",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+            <div>
+              <div style={{color:"#5A7A00",fontSize:10,marginBottom:4}}>초대 코드</div>
+              <div style={{color:"#1A2E00",fontSize:18,fontWeight:900,letterSpacing:3}}>{FC}</div>
+            </div>
+            <button onClick={()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);}} className="bp" style={{background:copied?"#4A7C00":"#1A2E00",border:"none",borderRadius:10,padding:"7px 12px",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"background 0.3s",flexShrink:0}}>
+              {copied?"✓ 복사됨":"복사"}
+            </button>
+          </div>
+          <div style={{background:"rgba(255,255,255,0.85)",borderRadius:16,padding:"14px 18px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div><div style={{color:"#5A7A00",fontSize:10,marginBottom:4}}>초대 링크</div><div style={{color:"#1A2E00",fontSize:12,fontWeight:600}}>{IL}</div></div>
+            <button className="bp" style={{background:"#1A2E00",border:"none",borderRadius:10,padding:"8px 14px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>공유</button>
+          </div>
+        </div>
+        <button onClick={onJoin} className="bp" style={{width:"100%",background:"#fff",border:"2px solid #D8F3DC",borderRadius:20,padding:"16px",fontSize:14,fontWeight:700,color:"#4A7C00",cursor:"pointer",fontFamily:"inherit",marginBottom:16}}>🌿 다른 가족 정원에 참여하기</button>
+        <div style={{background:"#fff",borderRadius:24,padding:20,boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
+          <div style={{fontSize:14,fontWeight:700,color:"#2D5000",marginBottom:14}}>내 최근 활동</div>
+          {myLog.slice(0,3).map((log,i)=>{
+            const plant=plants.find(p=>p.id===log.plantId);
+            return(
+              <div key={log.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:i<2?"1px solid #F0F7EE":"none"}}>
+                <span style={{fontSize:24}}>{plant?.emoji}</span>
+                <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:"#2D5000"}}>{plant?.nickname} {log.action}</div>{log.note?<div style={{fontSize:11,color:"#7A9A3A"}}>"{log.note}"</div>:null}</div>
+                <div style={{fontSize:11,color:"#B8C880"}}>{(()=>{const d=new Date(log.date);return isNaN(d)?"":((d.getMonth()+1)+"월 "+d.getDate()+"일");})()}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── FAMILY ───────────────────────────────────────────────────────────────────
+function FamilyScreen({members,onRemoveMember,FC,IL,waterLog,plants,onJoin,onBack}){
+  const [tab,setTab]=useState("members");
+  const fmtActivityDate=(isoStr)=>{
+    if(!isoStr) return "";
+    const d=new Date(isoStr);
+    if(isNaN(d)) return "";
+    const diff=Math.floor((BASE_NOW-d)/86400000);
+    if(diff===0) return "오늘";
+    if(diff===1) return "어제";
+    return (d.getMonth()+1)+"월 "+d.getDate()+"일";
+  };
+  const memberActivity=members.map(m=>({...m,logs:waterLog.filter(l=>l.memberId===m.id)}));
+  const AC={"물주기":{bg:"#F3FAD0",dot:"#6AAF00"},"흙 점검":{bg:"#FFF8E8",dot:"#F0A500"},"분갈이":{bg:"#F0F0FF",dot:"#6060CC"}};
+  return(
+    <div style={{height:"100%",minHeight:0,overflowY:"auto",background:"#F5F9E8",paddingBottom:80,position:"relative"}}>
+      <ScreenHeader onBack={onBack} sub="FAMILY GARDEN" label="가족 정원" bg="#2D5000" dark={true} />
+      <div style={{padding:"16px 20px 80px"}}>
+        <div style={{display:"flex",background:"#fff",borderRadius:16,padding:4,marginBottom:20,boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+          {[{key:"members",label:"가족 멤버"},{key:"activity",label:"활동 피드"},{key:"invite",label:"초대하기"}].map(t=>(
+            <button key={t.key} onClick={()=>setTab(t.key)} style={{flex:1,padding:"10px 0",borderRadius:12,border:"none",background:tab===t.key?"#4A7C00":"transparent",color:tab===t.key?"#fff":"#7A9A3A",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"all 0.2s"}}>{t.label}</button>
+          ))}
+        </div>
+        {tab==="members"&&memberActivity.map((m,i)=>(
+          <div key={m.id} style={{background:"#fff",borderRadius:20,padding:18,marginBottom:12,boxShadow:"0 2px 10px rgba(0,0,0,0.06)",animation:"fadeIn 0.3s ease "+i*0.07+"s both"}}>
+            <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:14}}>
+              <div style={{width:52,height:52,borderRadius:"50%",background:m.color+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,border:"2px solid "+m.color+"44"}}>{m.avatar}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:15,fontWeight:800,color:"#2D5000"}}>{m.name}</div>
+                <div style={{fontSize:11,color:"#7A9A3A"}}>참여: {m.joined}</div>
+              </div>
+              {m.role==="owner"
+                ? <span style={{background:"#FFF3CD",color:"#856404",borderRadius:8,padding:"3px 10px",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",gap:4}}><Mi name="workspace_premium" size={13} color="inherit" />Owner</span>
+                : <button onClick={()=>onRemoveMember(m.id)} className="bp" style={{background:"#FFF0F0",color:"#E85555",border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>내보내기</button>
+              }
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+              {[{label:"물주기",value:m.logs.filter(l=>l.action==="물주기").length,emoji:"💧"},{label:"흙 점검",value:m.logs.filter(l=>l.action==="흙 점검").length,emoji:"🌍"},{label:"분갈이",value:m.logs.filter(l=>l.action==="분갈이").length,emoji:"🪴"}].map((s,si)=>(
+                <div key={si} style={{background:"#F5F9E8",borderRadius:10,padding:"8px 4px",textAlign:"center"}}>
+                  <div style={{fontSize:16}}>{s.emoji}</div>
+                  <div style={{fontSize:16,fontWeight:800,color:"#2D5000"}}>{s.value}</div>
+                  <div style={{fontSize:9,color:"#7A9A3A"}}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+            {m.logs.length>0&&(()=>{const plant=plants.find(p=>p.id===m.logs[0].plantId);return <div style={{marginTop:12,background:"#F8FCF8",borderRadius:10,padding:"8px 12px"}}><div style={{fontSize:11,color:"#7A9A3A"}}>최근 활동</div><div style={{fontSize:12,color:"#4A7C00",fontWeight:600,marginTop:2}}>{plant?.emoji} {plant?.nickname} {m.logs[0].action} · {m.logs[0].date}</div></div>;})()}
+          </div>
+        ))}
+        {tab==="activity"&&waterLog.map((log,i)=>{
+          const plant=plants.find(p=>p.id===log.plantId);
+          const ac=AC[log.action]||{bg:"#F5F9E8",dot:"#7A9A3A"};
+          return(
+            <div key={log.id} style={{background:"#fff",borderRadius:18,padding:"14px 16px",display:"flex",gap:12,boxShadow:"0 1px 4px rgba(0,0,0,0.04)",marginBottom:10,animation:"fadeIn 0.3s ease "+i*0.04+"s both",position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",left:0,top:0,bottom:0,width:4,background:ac.dot,borderRadius:"4px 0 0 4px"}}/>
+              <span style={{fontSize:30,marginLeft:4}}>{log.memberAvatar}</span>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:13,fontWeight:700,color:"#2D5000"}}>{log.memberName}</span><span style={{fontSize:11,color:"#B8C880"}}>{fmtActivityDate(log.date)}</span></div>
+                <div style={{fontSize:12,color:"#5A7A00",marginTop:2}}><span style={{background:ac.bg,color:ac.dot,borderRadius:6,padding:"1px 6px",fontWeight:700,marginRight:4,fontSize:11}}>{log.action}</span>{plant?.emoji} {plant?.nickname}</div>
+                {log.note?<div style={{fontSize:11,color:"#7A9A3A",marginTop:6,fontStyle:"italic"}}>💬 "{log.note}"</div>:null}
+              </div>
+            </div>
+          );
+        })}
+        {tab==="invite"&&(
+          <div style={{animation:"fadeIn 0.3s ease"}}>
+            <div style={{background:"#fff",borderRadius:20,padding:24,marginBottom:14,boxShadow:"0 2px 8px rgba(0,0,0,0.06)"}}>
+              <div style={{color:"#4A7C00",fontSize:12,fontWeight:600,marginBottom:6}}><span style={{display:"flex",alignItems:"center",gap:4}}><Mi name="key" size={13} color="#4A7C00" />초대 코드</span></div>
+              <div style={{color:"#5A7A00",fontSize:13,marginBottom:20,lineHeight:1.5}}>가족에게 이 코드를 알려주세요. 앱 → 마이페이지 → 참여하기에서 입력하면 돼요.</div>
+              <div style={{background:"#fff",borderRadius:16,padding:"20px",textAlign:"center",marginBottom:14,boxShadow:"0 2px 8px rgba(0,0,0,0.06)"}}>
+                <div style={{color:"#888",fontSize:11,marginBottom:8}}>나의 가족 정원 코드</div>
+                <div style={{color:"#1A2E00",fontSize:30,fontWeight:900,letterSpacing:6}}>{FC}</div>
+              </div>
+              <button className="bp" style={{width:"100%",background:"#1A2E00",color:"#fff",border:"none",borderRadius:14,padding:"14px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}><span style={{display:"flex",alignItems:"center",gap:6}}><Mi name="content_copy" size={15} color="inherit" />코드 복사하기</span></button>
+            </div>
+            <div style={{background:"#fff",borderRadius:20,padding:20,marginBottom:14,boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
+              <div style={{fontSize:14,fontWeight:700,color:"#2D5000",marginBottom:6}}>🔗 초대 링크</div>
+              <div style={{fontSize:12,color:"#7A9A3A",marginBottom:14}}>링크를 탭하면 자동으로 앱에서 열려요</div>
+              <div style={{background:"#F8F9FA",borderRadius:12,padding:"12px 14px",display:"flex",alignItems:"center",gap:10,marginBottom:12,border:"1px solid #E8EEE0"}}>
+                <span style={{fontSize:18}}>🌿</span>
+                <div style={{fontSize:12,color:"#4A7C00",fontWeight:600,flex:1,wordBreak:"break-all"}}>{IL}</div>
+                <button className="bp" style={{background:"#F3FAD0",color:"#4A7C00",border:"none",borderRadius:10,padding:"7px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>복사</button>
+              </div>
+            </div>
+            <button onClick={onJoin} className="bp" style={{width:"100%",background:"transparent",border:"2px dashed #B8C880",borderRadius:20,padding:"16px",fontSize:14,fontWeight:700,color:"#4A7C00",cursor:"pointer",fontFamily:"inherit"}}>🌿 다른 가족 정원 코드 입력하기</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── JOIN FAMILY ──────────────────────────────────────────────────────────────
+function JoinFamilyScreen({onJoin,onBack}){
+  const [code,setCode]=useState("");
+  const [step,setStep]=useState("input");
+  const [error,setError]=useState("");
+  const [joined,setJoined]=useState(false); // 정원에 합류한 상태 시뮬레이션
+  const handleVerify=()=>{ if(code.trim().length<4){setError("올바른 코드를 입력해주세요");return;} setError("");setStep("confirm"); };
+  if(step==="done") return(
+    <div style={{flex:1,minHeight:0,background:"#F5F9E8",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:32,gap:20,position:"relative"}}>
+      <div style={{fontSize:80,animation:"sprout 1s ease"}}>👨‍👩‍👧</div>
+      <div style={{color:"#2D5000",fontSize:26,fontWeight:800,textAlign:"center"}}>가족 정원에 합류했어요!</div>
+      <div style={{color:"#5A7A00",fontSize:15,textAlign:"center",lineHeight:1.7}}>이제 함께 식물을 관리하고<br/>서로의 기록을 볼 수 있어요 🌿</div>
+      {/* 나가기 버튼 (비오너용) */}
+      <div style={{marginTop:8,background:"#fff",borderRadius:16,padding:"14px 20px",width:"100%",textAlign:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.06)"}}>
+        <div style={{color:"#7A9A3A",fontSize:11,marginBottom:10}}>참여 중인 정원</div>
+        <button onClick={()=>{setStep("input");setCode("");}} className="bp" style={{background:"#FFF0F0",color:"#E85555",border:"1px solid #FFCCCC",borderRadius:12,padding:"10px 20px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+          🚪 정원 나가기
+        </button>
+      </div>
+      <button onClick={onJoin} className="bp" style={{background:"#C8E85A",color:"#2D5000",border:"none",borderRadius:20,padding:"18px 48px",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginTop:8}}>마이페이지로 이동</button>
+    </div>
+  );
+  if(step==="confirm") return(
+    <div style={{height:"100%",minHeight:0,display:"flex",flexDirection:"column",background:"#F5F9E8"}}>
+      <div style={{background:"#2D5000",padding:"12px 20px 20px"}}>
+        <button onClick={()=>setStep("input")} className="bp" style={{background:"none",border:"none",color:"#fff",fontSize:28,fontWeight:300,cursor:"pointer",lineHeight:1,padding:"0 4px",marginBottom:18}}><Mi name="arrow_back_ios_new" size={16} color="rgba(255,255,255,0.7)" /></button>
+        <div style={{color:"#fff",fontSize:20,fontWeight:800}}>정원 확인</div>
+      </div>
+      <div style={{flex:1,padding:24,display:"flex",flexDirection:"column",gap:20}}>
+        <div style={{background:"#fff",borderRadius:24,padding:24,boxShadow:"0 4px 16px rgba(0,0,0,0.08)",textAlign:"center"}}>
+          <div style={{fontSize:56,marginBottom:16}}>🏡</div>
+          <div style={{fontSize:18,fontWeight:800,color:"#2D5000",marginBottom:8}}>홍길동네 식물원</div>
+          <div style={{fontSize:13,color:"#7A9A3A",marginBottom:20}}>코드: {code}</div>
+          <div style={{display:"flex",justifyContent:"center",marginBottom:8}}>
+            {["🧑‍🌾","👩","🧒"].map((a,i)=><div key={i} style={{width:40,height:40,borderRadius:"50%",background:"#EEF7B0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,marginLeft:i>0?-8:0,border:"2px solid #fff"}}>{a}</div>)}
+          </div>
+          <div style={{fontSize:12,color:"#5A7A00"}}>현재 3명이 함께하고 있어요</div>
+        </div>
+        <div style={{background:"#F3FAD0",borderRadius:16,padding:16}}>
+          <div style={{fontSize:13,fontWeight:600,color:"#2D5000",marginBottom:8}}>✅ 합류하면 이런 것들을 볼 수 있어요</div>
+          {["가족 식물 목록과 관리 기록","누가 언제 물 줬는지 피드","식물 일기 & 사진 공유","물주기 알림 공유"].map((t,i)=><div key={i} style={{fontSize:12,color:"#5A7A00",marginTop:4}}>• {t}</div>)}
+        </div>
+        <button onClick={()=>setStep("done")} className="bp" style={{background:"#4A7C00",color:"#fff",border:"none",borderRadius:20,padding:"18px",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>이 정원에 합류하기 🌿</button>
+      </div>
+    </div>
+  );
+  return(
+    <div style={{height:"100%",minHeight:0,display:"flex",flexDirection:"column",background:"#F5F9E8"}}>
+      <div style={{background:"#2D5000",padding:"12px 20px 20px"}}>
+        {onBack&&<button onClick={onBack} className="bp" style={{background:"none",border:"none",color:"#fff",fontSize:28,fontWeight:300,cursor:"pointer",lineHeight:1,padding:"0 4px",marginBottom:18}}><Mi name="arrow_back_ios_new" size={16} color="rgba(255,255,255,0.7)" /></button>}
+        <div style={{color:"rgba(255,255,255,0.7)",fontSize:12}}>JOIN GARDEN</div>
+        <div style={{color:"#fff",fontSize:22,fontWeight:800}}>가족 정원 참여</div>
+      </div>
+      <div style={{flex:1,padding:24,display:"flex",flexDirection:"column",gap:20}}>
+        <div style={{background:"#fff",borderRadius:24,padding:24,boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
+          <div style={{fontSize:36,textAlign:"center",marginBottom:16}}>🔑</div>
+          <div style={{fontSize:15,fontWeight:700,color:"#2D5000",textAlign:"center",marginBottom:6}}>초대 코드 입력</div>
+          <div style={{fontSize:13,color:"#7A9A3A",textAlign:"center",marginBottom:20}}>가족에게 받은 코드를 입력해주세요</div>
+          <input value={code} onChange={e=>{setCode(e.target.value.toUpperCase());setError("");}} placeholder="예: PLANT-7842" style={{width:"100%",padding:"16px 20px",borderRadius:16,border:"2px solid "+error?"#FF6B6B":"#EEF7B0",background:"#F8FCF8",fontSize:18,fontWeight:700,color:"#2D5000",fontFamily:"inherit",outline:"none",textAlign:"center",letterSpacing:3}}/>
+          {error&&<div style={{color:"#FF6B6B",fontSize:12,textAlign:"center",marginTop:8}}>{error}</div>}
+        </div>
+        <div style={{background:"#fff",borderRadius:20,padding:20,boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+          <div style={{fontSize:13,fontWeight:700,color:"#2D5000",marginBottom:8}}>또는 링크로 참여</div>
+          <div style={{fontSize:12,color:"#7A9A3A",marginBottom:12}}>가족이 공유한 초대 링크를 붙여넣기 하세요</div>
+          <input placeholder="restinplant.app/join/..." style={{width:"100%",padding:"12px 16px",borderRadius:12,border:"2px solid #E0EEE4",background:"#F8FCF8",fontSize:12,color:"#2D5000",fontFamily:"inherit",outline:"none"}}/>
+        </div>
+        <button onClick={handleVerify} className="bp" style={{background:code.length>0?"#4A7C00":"#B8C880",color:"#fff",border:"none",borderRadius:20,padding:"18px",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"background 0.3s"}}><span style={{display:"flex",alignItems:"center",gap:4}}>정원 찾기 <Mi name="arrow_forward" size={15} /></span></button>
+      </div>
+    </div>
+  );
+}
+
+// ─── WATER MODAL ─────────────────────────────────────────────────────────────
+function WaterModal({plantId,plants,members,onClose,onSave}){
+  const plant=plants.find(p=>p.id===plantId);
+  const [action,setAction]=useState("물주기");
+  const [note,setNote]=useState("");
+  const [member,setMember]=useState(members[0]);
+  const ACTIONS=[{label:"물주기",emoji:"💧"},{label:"흙 점검",emoji:"🌍"},{label:"분갈이",emoji:"🪴"},{label:"영양제",emoji:"💊"},{label:"가지치기",emoji:"✂️"}];
+  const handleSave=()=>onSave({id:Date.now(),plantId,memberId:member.id,memberName:member.name,memberAvatar:member.avatar,action,date:"방금",time:new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"}),note});
+  return(
+    <div style={{position:"absolute",inset:0,zIndex:100}}>
+      <div onClick={onClose} style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",animation:"overlayIn 0.2s ease"}}/>
+      <div style={{position:"absolute",bottom:0,left:0,right:0,background:"#fff",borderRadius:"28px 28px 0 0",padding:"24px 20px 40px",animation:"modalIn 0.3s ease"}}>
+        <div style={{width:40,height:4,background:"#D1E8D1",borderRadius:2,margin:"0 auto 20px"}}/>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
+          <span style={{fontSize:40}}>{plant?.emoji}</span>
+          <div><div style={{fontSize:18,fontWeight:800,color:"#2D5000"}}>{plant?.nickname}</div><div style={{fontSize:12,color:"#7A9A3A"}}>관리 기록 남기기</div></div>
+        </div>
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#5A7A00",marginBottom:8}}>누가 했나요?</div>
+          <div style={{display:"flex",gap:8}}>
+            {members.map(m=>(
+              <button key={m.id} onClick={()=>setMember(m)} style={{flex:1,background:member.id===m.id?"#4A7C00":"#F5F9E8",color:member.id===m.id?"#fff":"#2D5000",border:"none",borderRadius:14,padding:"10px 4px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                <span style={{fontSize:22}}>{m.avatar}</span>
+                {m.name.split(" ")[0]}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#5A7A00",marginBottom:8}}>무엇을 했나요?</div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            {ACTIONS.map(a=><button key={a.label} onClick={()=>setAction(a.label)} style={{background:action===a.label?"#4A7C00":"#F5F9E8",color:action===a.label?"#fff":"#2D5000",border:"none",borderRadius:20,padding:"8px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{a.emoji} {a.label}</button>)}
+          </div>
+        </div>
+        <div style={{marginBottom:20}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#5A7A00",marginBottom:8}}>메모 (선택)</div>
+          <input value={note} onChange={e=>setNote(e.target.value)} placeholder="예: 흙이 건조해서 충분히 줬어요..." style={{width:"100%",padding:"12px 16px",borderRadius:14,border:"2px solid #E0EEE4",background:"#F8FCF8",fontSize:13,color:"#2D5000",fontFamily:"inherit",outline:"none"}}/>
+        </div>
+        <button onClick={handleSave} className="bp" style={{width:"100%",background:"#4A7C00",color:"#fff",border:"none",borderRadius:18,padding:"16px",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>✅ 기록 저장하기</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── COMMUNITY (식물 자랑 피드) ───────────────────────────────────────────────
+const INIT_COMMUNITY_POSTS = [
+  {id:"c1", author:"초록손민지", avatar:"🧑‍🌾", plant:"몬스테라 델리시오사", caption:"드디어 새잎이 펼쳐졌어요! 3주 기다렸는데 감동 😭🌿", emoji:"🌿", bg:"#EEF7B0", likes:42, comments:[
+    {id:"r1",author:"식물덕후",avatar:"🌱",text:"와 정말 예쁘다!! 몇 개월 된 거예요?"},
+    {id:"r2",author:"그린라이프",avatar:"🪴",text:"새잎 펼칠 때 그 설렘... 최고죠"},
+  ], time:"2시간 전"},
+  {id:"c2", author:"베란다가드너", avatar:"🌺", plant:"칼라데아 마코야나", caption:"잎무늬가 너무 신비로워서 매일 보게 돼요 🦚", emoji:"🦚", bg:"#EAF4F4", likes:87, comments:[
+    {id:"r3",author:"식집사",avatar:"🌸",text:"칼라데아는 까다롭지 않나요? 관리 팁 부탁드려요!"},
+  ], time:"5시간 전"},
+  {id:"c3", author:"도시농부", avatar:"🥬", plant:"스투키", caption:"화분 새로 바꿔줬더니 더 싱싱해 보이는 건 기분 탓인가요 ㅋㅋ 🪴", emoji:"🪴", bg:"#FFF8E0", likes:31, comments:[], time:"어제"},
+  {id:"c4", author:"플랜테리어", avatar:"🏡", plant:"틸란드시아 이오난사", caption:"공중식물 컬렉션 늘리는 중 🌬️ 흙도 물도 없이 자라는 게 신기해", emoji:"🌬️", bg:"#F0F0FF", likes:65, comments:[
+    {id:"r4",author:"초록손민지",avatar:"🧑‍🌾",text:"분무만 해주면 되는 거죠?"},
+    {id:"r5",author:"플랜테리어",avatar:"🏡",text:"네! 주 2-3회 분무면 충분해요 😊"},
+  ], time:"어제"},
+  {id:"c5", author:"반려식물러", avatar:"🌷", plant:"리시마키아 누물라리아", caption:"노란 잎이 너무 귀여워서 구매했는데 잘 크고 있어요 🌼", emoji:"🌼", bg:"#FFFBE0", likes:19, comments:[], time:"3일 전"},
+];
+
+function CommunityScreen({plants, plantPhotos, myAvatar, myNickname, onNicknameChange, onBack}){
+  const [posts, setPosts] = useState(INIT_COMMUNITY_POSTS);
+  const [liked, setLiked] = useState(new Set());
+  const [showCompose, setShowCompose] = useState(false);
+  const [showNickSetup, setShowNickSetup] = useState(false);
+  const [nickDraft, setNickDraft] = useState("");
+  const [newCaption, setNewCaption] = useState("");
+  const [newPlant, setNewPlant] = useState(plants[0]?.nickname||"");
+  const [openComment, setOpenComment] = useState(null);
+  const [commentText, setCommentText] = useState("");
+  const [filter, setFilter] = useState("전체");
+  const fileRef = useRef();
+  const [newPhoto, setNewPhoto] = useState(null);
+
+  const displayName = myNickname || "나";
+
+  const toggleLike = (id) => {
+    setLiked(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+    setPosts(prev => prev.map(p => p.id===id ? {...p, likes: p.likes+(liked.has(id)?-1:1)} : p));
+  };
+
+  const handleComposePress = () => {
+    if (!myNickname) { setNickDraft(""); setShowNickSetup(true); }
+    else setShowCompose(true);
+  };
+
+  const saveNickAndCompose = () => {
+    if (!nickDraft.trim()) return;
+    onNicknameChange(nickDraft.trim());
+    setShowNickSetup(false);
+    setShowCompose(true);
+  };
+
+  const submitPost = () => {
+    if(!newCaption.trim()) return;
+    const post = {
+      id: "c"+Date.now(),
+      author: myNickname||"나",
+      avatar: myAvatar||"🌱",
+      plant: newPlant,
+      caption: newCaption,
+      emoji: "🌿",
+      bg: "#EEF7B0",
+      likes: 0,
+      comments: [],
+      time: "방금",
+      photo: newPhoto,
+    };
+    setPosts(prev => [post, ...prev]);
+    setNewCaption("");
+    setNewPhoto(null);
+    setShowCompose(false);
+  };
+
+  const submitComment = (postId) => {
+    if(!commentText.trim()) return;
+    setPosts(prev => prev.map(p => p.id===postId ? {
+      ...p,
+      comments:[...p.comments,{id:"r"+Date.now(),author:myNickname||"나",avatar:myAvatar||"🌱",text:commentText}]
+    } : p));
+    setCommentText("");
+  };
+
+  return (
+    <div style={{height:"100%",minHeight:0,display:"flex",flexDirection:"column",background:"#F5F9E8",position:"relative"}}>
+      {/* 헤더 */}
+      <div style={{background:"#F5F9E8",padding:"16px 20px 20px",flexShrink:0}}>
+        <button onClick={onBack} className="bp" style={{background:"none",border:"none",color:"rgba(255,255,255,0.85)",fontSize:13,fontWeight:600,cursor:"pointer",lineHeight:1,padding:"0",marginBottom:16,display:"flex",alignItems:"center",gap:4}}>
+          <Mi name="arrow_back_ios_new" size={22} color="#1A2E00" />
+        </button>
+        <div style={{color:"#7A9A3A",fontSize:11,fontWeight:700,letterSpacing:1.5,marginBottom:6}}>COMMUNITY</div>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{color:"#2D5000",fontSize:24,fontWeight:800,lineHeight:1.15}}>식물 자랑 🌸</div>
+          <button onClick={handleComposePress} style={{background:"#D4F06E",color:"#2D5000",border:"none",borderRadius:20,padding:"8px 16px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:6}}><span style={{display:"flex",alignItems:"center",gap:6}}><Mi name="edit" size={15} />자랑하기</span></button>
+        </div>
+        {/* 필터 */}
+        <div style={{display:"flex",gap:8,marginTop:14,overflowX:"auto",paddingBottom:2}}>
+          {["전체","최신","인기"].map(f=>(
+            <button key={f} onClick={()=>setFilter(f)} style={{flexShrink:0,background:filter===f?"#1A2E00":"rgba(0,0,0,0.06)",color:filter===f?"#fff":"#888",border:"none",borderRadius:20,padding:"6px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{f}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* 피드 */}
+      <div style={{flex:1,overflowY:"auto",padding:"16px 16px 90px"}}>
+        {[...posts].sort((a,b)=>filter==="인기"?b.likes-a.likes:0).map((post,i)=>{
+          const isLiked = liked.has(post.id);
+          const showCmt = openComment===post.id;
+          return (
+            <div key={post.id} style={{background:"#fff",borderRadius:20,marginBottom:16,boxShadow:"0 2px 8px rgba(0,0,0,0.05)",overflow:"hidden",animation:"fadeIn 0.3s ease "+i*0.04+"s both"}}>
+              {/* 포스트 헤더 */}
+              <div style={{padding:"14px 16px 10px",display:"flex",alignItems:"center",gap:10}}>
+                <div style={{width:38,height:38,borderRadius:"50%",background:post.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{post.avatar}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:700,color:"#2D5000"}}>{post.author}</div>
+                  <div style={{fontSize:11,color:"#7A9A3A"}}>{post.plant} · {post.time}</div>
+                </div>
+              </div>
+
+              {/* 이미지 영역 */}
+              {post.photo ? (
+                <img src={post.photo} alt="plant" style={{width:"100%",aspectRatio:"1",objectFit:"cover",display:"block"}}/>
+              ) : (
+                <div style={{width:"100%",aspectRatio:"1",background:post.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:96}}>{post.emoji}</div>
+              )}
+
+              {/* 액션 바 */}
+              <div style={{padding:"12px 16px 4px",display:"flex",alignItems:"center",gap:16}}>
+                <button onClick={()=>toggleLike(post.id)} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:5,padding:0}}>
+                  <span style={{fontSize:22,transition:"transform 0.15s",transform:isLiked?"scale(1.3)":"scale(1)"}}><Mi name={isLiked?"favorite":"favorite_border"} size={16} color={isLiked?"#FF6B6B":"#B8C880"} /></span>
+                  <span style={{fontSize:13,fontWeight:700,color:isLiked?"#E85555":"#B8C880"}}>{post.likes}</span>
+                </button>
+                <button onClick={()=>setOpenComment(showCmt?null:post.id)} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:5,padding:0}}>
+                  <span style={{fontSize:20}}><Mi name="chat_bubble" size={18} color="#7A9A3A" /></span>
+                  <span style={{fontSize:13,fontWeight:700,color:"#B8C880"}}>{post.comments.length}</span>
+                </button>
+              </div>
+
+              {/* 캡션 */}
+              <div style={{padding:"4px 16px 14px"}}>
+                <span style={{fontSize:13,fontWeight:700,color:"#2D5000"}}>{post.author} </span>
+                <span style={{fontSize:13,color:"#5A7A00"}}>{post.caption}</span>
+              </div>
+
+              {/* 댓글 섹션 */}
+              {showCmt && (
+                <div style={{borderTop:"1px solid #F0F7EE",padding:"12px 16px 14px"}}>
+                  {post.comments.length===0 && (
+                    <div style={{fontSize:12,color:"#B8C880",marginBottom:10}}>첫 댓글을 남겨보세요 🌱</div>
+                  )}
+                  {post.comments.map(c=>(
+                    <div key={c.id} style={{display:"flex",gap:8,marginBottom:8,alignItems:"flex-start"}}>
+                      <span style={{fontSize:18,flexShrink:0}}>{c.avatar}</span>
+                      <div style={{background:"#F5F9E8",borderRadius:12,padding:"6px 10px",flex:1}}>
+                        <span style={{fontSize:12,fontWeight:700,color:"#2D5000"}}>{c.author} </span>
+                        <span style={{fontSize:12,color:"#5A7A00"}}>{c.text}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {/* 댓글 입력 */}
+                  <div style={{display:"flex",gap:8,marginTop:8,alignItems:"center"}}>
+                    <span style={{fontSize:20}}>{myAvatar||"🌱"}</span>
+                    <input
+                      value={commentText}
+                      onChange={e=>setCommentText(e.target.value)}
+                      onKeyDown={e=>e.key==="Enter"&&submitComment(post.id)}
+                      placeholder="댓글 달기..."
+                      style={{flex:1,border:"1.5px solid #D8F3DC",borderRadius:20,padding:"8px 14px",fontSize:12,fontFamily:"inherit",outline:"none",background:"#F8FCF8"}}
+                    />
+                    <button onClick={()=>submitComment(post.id)} style={{background:"#4A7C00",color:"#fff",border:"none",borderRadius:20,padding:"8px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>등록</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 닉네임 설정 모달 */}
+      {showNickSetup && (
+        <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:"0 32px"}} onClick={()=>setShowNickSetup(false)}>
+          <div style={{background:"#fff",borderRadius:24,padding:"28px 24px",width:"100%"}} onClick={e=>e.stopPropagation()}>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{fontSize:40,marginBottom:10}}>🌸</div>
+              <div style={{fontSize:17,fontWeight:800,color:"#2D5000",marginBottom:6}}>커뮤니티 닉네임 설정</div>
+              <div style={{fontSize:13,color:"#7A9A3A",lineHeight:1.5}}>커뮤니티에서 사용할 닉네임이에요.<br/>가족에게는 본명으로 표시돼요.</div>
+            </div>
+            <div style={{background:"#F5F9E8",borderRadius:14,padding:"4px 4px 4px 14px",display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+              <span style={{fontSize:13,color:"#7A9A3A",fontWeight:700,flexShrink:0}}>@</span>
+              <input
+                value={nickDraft}
+                onChange={e=>setNickDraft(e.target.value)}
+                onKeyDown={e=>e.key==="Enter"&&saveNickAndCompose()}
+                placeholder="닉네임 입력 (최대 12자)"
+                maxLength={12}
+                autoFocus
+                style={{flex:1,background:"none",border:"none",outline:"none",fontSize:15,fontFamily:"inherit",color:"#2D5000",padding:"10px 0"}}
+              />
+            </div>
+            <button onClick={saveNickAndCompose} disabled={!nickDraft.trim()} style={{width:"100%",background:nickDraft.trim()?"#4A7C00":"#B8C880",color:"#fff",border:"none",borderRadius:14,padding:"14px",fontSize:14,fontWeight:700,cursor:nickDraft.trim()?"pointer":"not-allowed",fontFamily:"inherit"}}><span style={{display:"flex",alignItems:"center",gap:6}}>설정하고 게시하기 <Mi name="arrow_forward" size={15} /></span></button>
+            <div style={{textAlign:"center",marginTop:12}}>
+              <span style={{fontSize:12,color:"#B8C880"}}>마이페이지에서도 변경할 수 있어요</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 글쓰기 모달 */}
+      {showCompose && (
+        <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"flex-end",zIndex:200}} onClick={()=>setShowCompose(false)}>
+          <div style={{background:"#fff",borderRadius:"24px 24px 0 0",padding:"24px 20px 40px",width:"100%"}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:16,fontWeight:800,color:"#2D5000",marginBottom:16}}><span style={{display:"flex",alignItems:"center",gap:6}}><Mi name="photo_library" size={20} color="#4A7C00" />식물 자랑하기</span></div>
+
+            {/* 식물 선택 */}
+            <div style={{marginBottom:12}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#5A7A00",marginBottom:6}}>어떤 식물인가요?</div>
+              <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:4}}>
+                {plants.map(p=>(
+                  <button key={p.id} onClick={()=>setNewPlant(p.nickname)} style={{flexShrink:0,background:newPlant===p.nickname?"#4A7C00":"#F5F9E8",color:newPlant===p.nickname?"#fff":"#5A7A00",border:"none",borderRadius:20,padding:"6px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+                    {p.emoji} {p.nickname}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 사진 업로드 */}
+            <div style={{marginBottom:12}}>
+              <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{
+                const f=e.target.files[0]; if(!f) return;
+                const r=new FileReader(); r.onload=ev=>setNewPhoto(ev.target.result); r.readAsDataURL(f);
+              }}/>
+              {newPhoto ? (
+                <div style={{position:"relative",marginBottom:4}}>
+                  <img src={newPhoto} style={{width:"100%",height:160,objectFit:"cover",borderRadius:14}}/>
+                  <button onClick={()=>setNewPhoto(null)} style={{position:"absolute",top:6,right:6,background:"rgba(0,0,0,0.5)",color:"#fff",border:"none",borderRadius:"50%",width:24,height:24,cursor:"pointer",fontSize:12}}>✕</button>
+                </div>
+              ):(
+                <button onClick={()=>fileRef.current.click()} style={{width:"100%",height:80,background:"#F5F9E8",border:"2px dashed #95D5B2",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",color:"#5A7A00",fontSize:13,fontWeight:600,fontFamily:"inherit"}}>
+                  📷 사진 추가 (선택)
+                </button>
+              )}
+            </div>
+
+            {/* 캡션 */}
+            <textarea
+              value={newCaption}
+              onChange={e=>setNewCaption(e.target.value)}
+              placeholder="우리 식물 자랑해봐요! 🌿"
+              rows={3}
+              style={{width:"100%",border:"1.5px solid #D8F3DC",borderRadius:14,padding:"12px 14px",fontSize:13,fontFamily:"inherit",outline:"none",resize:"none",boxSizing:"border-box",background:"#F8FCF8",marginBottom:14}}
+            />
+            <button onClick={submitPost} disabled={!newCaption.trim()} style={{width:"100%",background:newCaption.trim()?"#4A7C00":"#B8C880",color:"#fff",border:"none",borderRadius:14,padding:"14px",fontSize:14,fontWeight:700,cursor:newCaption.trim()?"pointer":"not-allowed",fontFamily:"inherit"}}><span style={{display:"flex",alignItems:"center",gap:6}}><Mi name="send" size={15} />게시하기</span></button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── BOTTOM NAV (5탭: 일기 제거, 캘린더 통합) ─────────────────────────────────
+function BottomNav({active,onNav,cartCount}){
+  const tabs=[
+    {key:"home",icon:"home",label:"홈"},
+    {key:"plants",icon:"yard",label:"식물"},
+    {key:"community",icon:"people",label:"커뮤니티"},
+    {key:"shop",icon:"shopping_bag",label:"쇼핑",badge:cartCount},
+    {key:"mypage",icon:"person",label:"마이"},
+  ];
+  return(
+    <div style={{height:72,background:"#E4FF66",borderTop:"none",display:"flex",alignItems:"center",padding:"0 4px",flexShrink:0}}>
+      {tabs.map(t=>(
+        <button key={t.key} onClick={()=>onNav(t.key)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:"none",border:"none",cursor:"pointer",padding:"8px 2px",fontFamily:"inherit",position:"relative"}}>
+          <Mi name={t.icon} size={24} color={active===t.key?"#1A2E00":"#888888"} style={{transition:"transform 0.2s",transform:active===t.key?"scale(1.1)":"scale(1)"}} />
+          <span style={{fontSize:9,fontWeight:active===t.key?700:400,color:active===t.key?"#1A2E00":"#888888"}}>{t.label}</span>
+          {active===t.key&&<div style={{position:"absolute",bottom:0,left:"50%",transform:"translateX(-50%)",width:18,height:3,background:"#1A2E00",borderRadius:2}}/>}
+          {t.badge>0&&<div style={{position:"absolute",top:4,right:"18%",background:"#FF6B6B",color:"#fff",borderRadius:"50%",width:14,height:14,fontSize:9,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>{t.badge}</div>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+    // 앱 마운트
+    const container = document.getElementById("root");
+    const root = ReactDOM.createRoot(container);
+    root.render(React.createElement(App, null));
+  </script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; width: 100%; overflow: hidden; background: #F5F9E8; font-family: "Pretendard", "Noto Sans KR", sans-serif; }
+
+    /* 폰 프레임 컨테이너 */
+    #root {
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      top: 0; left: 0;
+    }
+
+    /* 스크롤바 숨김 */
+    *::-webkit-scrollbar { display: none; }
+    * { scrollbar-width: none; -ms-overflow-style: none; }
+
+    /* Material Icons */
+    .mi {
+      font-family: "Material Symbols Rounded";
+      font-weight: normal;
+      font-style: normal;
+      display: inline-block;
+      line-height: 1;
+      text-transform: none;
+      letter-spacing: normal;
+      word-wrap: normal;
+      white-space: nowrap;
+      direction: ltr;
+      font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+    }
+
+    /* 버튼 기본 초기화 */
+    .bp { -webkit-tap-highlight-color: transparent; }
+    .bp:active { opacity: 0.75; transform: scale(0.97); }
+
+    /* 카드 호버 */
+    .ch { transition: transform 0.15s, box-shadow 0.15s; }
+    .ch:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1) !important; }
+
+    /* 애니메이션 */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes sprout {
+      0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+      60%  { transform: scale(1.15) rotate(5deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* input 기본 스타일 */
+    input, textarea {
+      box-sizing: border-box;
+      font-family: "Pretendard", "Noto Sans KR", sans-serif;
+    }
+    input:focus, textarea:focus { outline: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useRef } = React;
+
+
+// ─── SCREENS ─────────────────────────────────────────────────────────────────
+const S = {
+  SPLASH:"splash", ONBOARDING:"onboarding", HOME:"home",
+  MY_PLANTS:"my_plants", PLANT_DETAIL:"plant_detail", ADD_PLANT:"add_plant",
+  CALENDAR:"calendar", DIARY_WRITE:"diary_write",
+  SHOP:"shop", NOTIFICATIONS:"notifications",
+  MYPAGE:"mypage", FAMILY:"family", JOIN_FAMILY:"join_family",
+  CONTENT_FEED:"content_feed",
+  CONTENT_DETAIL:"content_detail",
+  COMMUNITY:"community",
+};
+
+// ─── PLANT DATABASE (75종) ────────────────────────────────────────────────────
+const PLANT_DB = [
+  // 음지·반음지 관엽
+  { name:"스투키", emoji:"🌵", tags:["다육","건조OK"], water:21, light:"반음지" },
+  { name:"산세베리아 로렌티", emoji:"🌿", tags:["공기정화","초보OK"], water:21, light:"반음지" },
+  { name:"스킨답서스", emoji:"🍃", tags:["덩굴","공기정화"], water:10, light:"반음지" },
+  { name:"스킨답서스 마블퀸", emoji:"🍃", tags:["덩굴","무늬종"], water:10, light:"반음지" },
+  { name:"아글라오네마", emoji:"🌿", tags:["관엽","반음지"], water:10, light:"반음지" },
+  { name:"금전수", emoji:"🪙", tags:["다육","건조OK"], water:14, light:"반음지" },
+  { name:"페페로미아", emoji:"🫛", tags:["소형","다육질"], water:10, light:"반음지" },
+  { name:"드라세나 마지나타", emoji:"🎋", tags:["공기정화","건조OK"], water:14, light:"반양지" },
+  { name:"몬스테라 델리시오사", emoji:"🌿", tags:["관엽","인기"], water:7, light:"반양지" },
+  { name:"몬스테라 아단소니", emoji:"🌿", tags:["덩굴","구멍잎"], water:7, light:"반양지" },
+  { name:"떡갈고무나무", emoji:"🌳", tags:["대형","관엽"], water:7, light:"반양지" },
+  { name:"벤자민고무나무", emoji:"🌳", tags:["공기정화","관엽"], water:7, light:"양지" },
+  { name:"파키라", emoji:"🪴", tags:["행운","건조OK"], water:10, light:"반양지" },
+  { name:"아레카야자", emoji:"🌴", tags:["야자","가습"], water:5, light:"양지" },
+  { name:"켄차야자", emoji:"🌴", tags:["야자","음지OK"], water:7, light:"반음지" },
+  { name:"테이블야자", emoji:"🌴", tags:["소형야자","음지OK"], water:7, light:"반음지" },
+  { name:"보스턴고사리", emoji:"🌿", tags:["고사리","가습"], water:3, light:"반음지" },
+  { name:"칼라데아 오르비폴리아", emoji:"🍃", tags:["무늬잎","고습도"], water:4, light:"반음지" },
+  { name:"마란타", emoji:"🍃", tags:["기도식물","고습도"], water:5, light:"반음지" },
+  { name:"싱고니움", emoji:"🌿", tags:["덩굴","공기정화"], water:7, light:"반음지" },
+  { name:"필로덴드론 브라질", emoji:"🌿", tags:["덩굴","무늬종"], water:7, light:"반음지" },
+  { name:"스파티필름", emoji:"🤍", tags:["꽃","공기정화"], water:5, light:"반음지" },
+  { name:"아이비", emoji:"🍃", tags:["덩굴","공기정화"], water:7, light:"반음지" },
+  { name:"호야 카르노사", emoji:"🌸", tags:["다육","꽃"], water:14, light:"반양지" },
+  { name:"디시디아", emoji:"🪴", tags:["착생","덩굴"], water:10, light:"반양지" },
+  // 다육·선인장
+  { name:"하월시아", emoji:"🌵", tags:["다육","소형"], water:14, light:"반음지" },
+  { name:"에케베리아", emoji:"🌵", tags:["다육","장미형"], water:14, light:"양지" },
+  { name:"세덤", emoji:"🌵", tags:["다육","건조OK"], water:14, light:"양지" },
+  { name:"알로에 베라", emoji:"🌵", tags:["다육","약용"], water:14, light:"양지" },
+  { name:"크라슐라", emoji:"🌵", tags:["다육","행운"], water:14, light:"양지" },
+  // 목본·대형
+  { name:"유카", emoji:"🌳", tags:["건조OK","대형"], water:14, light:"양지" },
+  { name:"올리브나무", emoji:"🫒", tags:["지중해","열매"], water:10, light:"양지" },
+  { name:"레몬나무", emoji:"🍋", tags:["열매","향기"], water:7, light:"양지" },
+  // 소형 관엽
+  { name:"필레아 페페로미오이데스", emoji:"🌿", tags:["소형","인기"], water:7, light:"반양지" },
+  { name:"피토니아", emoji:"🍃", tags:["무늬잎","소형"], water:3, light:"반음지" },
+  { name:"나비란", emoji:"🌿", tags:["소형","건조OK"], water:14, light:"반음지" },
+  { name:"홍콩야자", emoji:"🌿", tags:["관엽","음지OK"], water:7, light:"반음지" },
+  { name:"폴리셔스", emoji:"🌿", tags:["관엽","향기"], water:7, light:"반양지" },
+  { name:"드라세나 맛상게아나", emoji:"🎋", tags:["공기정화","대형"], water:10, light:"반양지" },
+  { name:"크루시아", emoji:"🌿", tags:["관엽","다육질"], water:10, light:"양지" },
+  { name:"뱅갈고무나무", emoji:"🌳", tags:["대형","인기"], water:7, light:"양지" },
+  { name:"인도고무나무", emoji:"🌳", tags:["대형","공기정화"], water:7, light:"반양지" },
+  { name:"알로카시아 폴리", emoji:"🌿", tags:["관엽","대형잎"], water:5, light:"반양지" },
+  { name:"칼라데아 마코야나", emoji:"🍃", tags:["무늬잎","고습도"], water:4, light:"반음지" },
+  { name:"필로덴드론 미칸", emoji:"🌿", tags:["벨벳잎","덩굴"], water:7, light:"반음지" },
+  { name:"필로덴드론 콩고", emoji:"🌿", tags:["대형잎","관엽"], water:7, light:"반양지" },
+  { name:"싱고니움 핑크", emoji:"🌸", tags:["핑크","덩굴"], water:7, light:"반음지" },
+  { name:"아글라오네마 실버퀸", emoji:"🌿", tags:["무늬잎","음지OK"], water:10, light:"반음지" },
+  { name:"스킨답서스 네온", emoji:"🍀", tags:["형광잎","덩굴"], water:10, light:"반음지" },
+  { name:"아비스고사리", emoji:"🌿", tags:["고사리","가습"], water:3, light:"반음지" },
+  { name:"여인초", emoji:"🌴", tags:["야자형","대형"], water:5, light:"양지" },
+  { name:"유칼립투스 폴리안", emoji:"🌿", tags:["향기","허브"], water:5, light:"양지" },
+  { name:"아스파라거스", emoji:"🌿", tags:["관엽","솜털"], water:5, light:"반양지" },
+  { name:"테트라스페르마", emoji:"🌿", tags:["소형몬스테라","덩굴"], water:7, light:"반음지" },
+  // 꽃·계절화
+  { name:"카랑코에", emoji:"🌺", tags:["꽃","다육"], water:14, light:"양지" },
+  { name:"시클라멘", emoji:"🌸", tags:["꽃","겨울꽃"], water:5, light:"반양지" },
+  { name:"호접란", emoji:"🌸", tags:["꽃","난초"], water:7, light:"반양지" },
+  { name:"제라늄", emoji:"🌺", tags:["꽃","향기"], water:7, light:"양지" },
+  { name:"칼란디바", emoji:"🌺", tags:["꽃","다육"], water:14, light:"양지" },
+  { name:"베고니아", emoji:"🌸", tags:["꽃","음지OK"], water:5, light:"반음지" },
+  { name:"에피스시아", emoji:"🌺", tags:["꽃","고습도"], water:4, light:"반음지" },
+  { name:"펜타스", emoji:"🌸", tags:["꽃","베란다"], water:5, light:"양지" },
+  { name:"히비스커스", emoji:"🌺", tags:["꽃","대형"], water:5, light:"양지" },
+  { name:"한련화", emoji:"🌼", tags:["꽃","식용"], water:5, light:"양지" },
+  { name:"목마가렛", emoji:"🌼", tags:["꽃","소형목본"], water:5, light:"양지" },
+  { name:"수국", emoji:"💐", tags:["꽃","계절"], water:3, light:"반양지" },
+  // 허브·채소
+  { name:"로즈마리", emoji:"🌿", tags:["허브","향기"], water:7, light:"양지" },
+  { name:"바질", emoji:"🌿", tags:["허브","식용"], water:3, light:"양지" },
+  { name:"민트", emoji:"🍃", tags:["허브","향기"], water:3, light:"반양지" },
+  { name:"타임", emoji:"🌿", tags:["허브","건조OK"], water:7, light:"양지" },
+  // 채소·과일
+  { name:"방울토마토", emoji:"🍅", tags:["채소","열매"], water:2, light:"양지" },
+  { name:"파", emoji:"🌱", tags:["채소","키우기쉬움"], water:3, light:"양지" },
+  { name:"상추", emoji:"🥬", tags:["채소","쌈채소"], water:2, light:"양지" },
+  { name:"당근", emoji:"🥕", tags:["채소","뿌리"], water:3, light:"양지" },
+  { name:"딸기", emoji:"🍓", tags:["과일","열매"], water:3, light:"양지" },
+  { name:"블루베리", emoji:"🫐", tags:["과일","목본"], water:3, light:"양지" },
+];
+
+const PLANT_CATEGORIES = [
+  { label: "전체", filter: null },
+  { label: "🌿 관엽", filter: (p) => p.tags.includes("관엽") || p.tags.includes("덩굴") || p.tags.includes("무늬잎") },
+  { label: "🌵 다육", filter: (p) => p.tags.includes("다육") || p.tags.includes("건조OK") },
+  { label: "🌺 꽃", filter: (p) => p.tags.includes("꽃") },
+  { label: "🌴 야자", filter: (p) => p.tags.includes("야자") || p.tags.includes("야자형") },
+  { label: "🍅 채소/과일", filter: (p) => p.tags.includes("채소") || p.tags.includes("과일") || p.tags.includes("허브") },
+];
+
+// ─── MOCK DATA ────────────────────────────────────────────────────────────────
+const FAMILY_MEMBERS = [
+  { id:1, name:"나 (김민지)", role:"owner", avatar:"🧑‍🌾", color:"#4A7C00", joined:"2024.12.01" },
+  { id:2, name:"엄마", role:"member", avatar:"👩", color:"#E76F51", joined:"2024.12.05" },
+  { id:3, name:"남동생", role:"member", avatar:"🧒", color:"#457B9D", joined:"2025.01.10" },
+];
+
+// ── 날짜 유틸 ─────────────────────────────────────────────────────────────────
+// 로그/이벤트는 ISO 문자열로 저장, UI에서만 "오늘/어제/N일 전"으로 변환
+const BASE_NOW = new Date("2026-04-04T08:00:00+09:00");
+function isoOffset(days) {
+  const d = new Date(BASE_NOW);
+  d.setDate(d.getDate() - days);
+  return d.toISOString();
+}
+function formatRelDate(isoStr) {
+  if (!isoStr) return "";
+  const d = new Date(isoStr);
+  if (isNaN(d)) return "";
+  const diff = Math.floor((BASE_NOW - d) / 86400000);
+  if (diff === 0) return "오늘";
+  if (diff === 1) return "어제";
+  if (diff > 1 && diff < 7) return diff+"일 전";
+  return (d.getMonth()+1)+"월 "+d.getDate()+"일";
+}
+
+const WATER_LOG_INIT = [
+  { id:1, plantId:3, memberId:2, memberName:"엄마", memberAvatar:"👩", action:"물주기", date:isoOffset(0), time:"오전 8:23", note:"흙이 건조해서 충분히 줬어요" },
+  { id:2, plantId:1, memberId:1, memberName:"나 (김민지)", memberAvatar:"🧑‍🌾", action:"물주기", date:isoOffset(1), time:"오후 6:00", note:"" },
+  { id:3, plantId:2, memberId:3, memberName:"남동생", memberAvatar:"🧒", action:"흙 점검", date:isoOffset(2), time:"오후 3:15", note:"흙이 아직 촉촉해요" },
+  { id:4, plantId:4, memberId:2, memberName:"엄마", memberAvatar:"👩", action:"물주기", date:isoOffset(3), time:"오전 9:00", note:"" },
+  { id:5, plantId:3, memberId:1, memberName:"나 (김민지)", memberAvatar:"🧑‍🌾", action:"분갈이", date:isoOffset(5), time:"오후 4:30", note:"드디어 분갈이 완료 😊" },
+];
+
+// moisture = 물 준 직후 100에서 시작해 주기가 다 되면 0에 가깝게 선형 감소
+// 단, 식물 특성에 따라 기저 수분 범위 다름 (다육은 건조 쪽이 정상)
+function calcMoisture(lastWatered, water) {
+  const ratio = Math.min(lastWatered / water, 1); // 0(방금 줌) ~ 1(주기 꽉 참)
+  return Math.round((1 - ratio) * 100);
+}
+
+const INIT_PLANTS = [
+  { id:1, name:"몬스테라 델리시오사", nickname:"몬순이", emoji:"🌿", color:"#4A7C00", bg:"#EEF7B0", water:7, lastWatered:5, nextWater:2, repot:180, soil:30, location:"거실 창가", tags:["관엽식물","반음지"], alerts:["물주기 D-2"] },
+  { id:2, name:"스투키", nickname:"뾰족이", emoji:"🌵", color:"#6AAF00", bg:"#C8E85A", water:21, lastWatered:18, nextWater:3, repot:365, soil:60, location:"침실", tags:["다육식물","건조주의"], alerts:["흙 점검 D-3"] },
+  { id:3, name:"칼라데아 마코야나", nickname:"줄무늬", emoji:"🍃", color:"#2D5000", bg:"#B5D94A", water:4, lastWatered:2, nextWater:2, repot:120, soil:20, location:"서재", tags:["관엽식물","고습도"], alerts:["물주기 오늘!","분갈이 필요"] },
+  { id:4, name:"올리브나무", nickname:"올리비아", emoji:"🫒", color:"#5A7A00", bg:"#CAF0F8", water:10, lastWatered:8, nextWater:2, repot:240, soil:45, location:"베란다", tags:["목본식물","햇빛 필요"], alerts:[] },
+].map(p => ({ ...p, moisture: calcMoisture(p.lastWatered, p.water) }));
+
+const DIARY_INIT = [
+  { id:1, plantId:3, memberId:2, memberName:"엄마", memberAvatar:"👩", calDate:"2025-03-02", title:"잎이 처음으로 펼쳐졌어요!", content:"오늘 칼라데아 새 잎이 롤처럼 말려있다가 드디어 펼쳐졌다. 정말 감동적인 순간이었음.", mood:"😍" },
+  { id:2, plantId:1, memberId:1, memberName:"나 (김민지)", memberAvatar:"🧑‍🌾", calDate:"2025-02-25", title:"물 주고 나서 훨씬 생기있어 보임", content:"건조해보였는데 물 주고 나니까 잎이 다시 빳빳해짐. 역시 물이 최고다.", mood:"😊" },
+];
+
+const NOTIFS = [
+  { id:1, type:"water", plant:"칼라데아 마코야나", msg:"오늘 물을 줘야 해요! 💧", time:"오전 9:00", emoji:"💧", urgent:true },
+  { id:2, type:"repot", plant:"칼라데아 마코야나", msg:"분갈이 시기가 됐어요!", time:"어제", emoji:"🪴", urgent:true },
+  { id:3, type:"water", plant:"몬스테라 델리시오사", msg:"2일 후 물주기 예정이에요", time:"오전 9:00", emoji:"🌿", urgent:false },
+  { id:4, type:"soil", plant:"스투키", msg:"흙 상태를 점검해보세요", time:"3일 전", emoji:"🌵", urgent:false },
+];
+
+const SHOP_ITEMS = [
+  { id:1, name:"프리미엄 배합토", price:"12,900", emoji:"🪴", tag:"베스트", tagColor:"#FF6B6B" },
+  { id:2, name:"황금 물조리개", price:"28,000", emoji:"🚿", tag:"신상", tagColor:"#FFB347" },
+  { id:3, name:"세라믹 화분 세트", price:"45,000", emoji:"🏺", tag:"인기", tagColor:"#74C0FC" },
+  { id:4, name:"식물 영양제", price:"8,500", emoji:"💊", tag:"추천", tagColor:"#69DB7C" },
+  { id:5, name:"분갈이 스쿱 세트", price:"15,000", emoji:"🥄", tag:"", tagColor:"" },
+  { id:6, name:"방충 스프레이", price:"11,200", emoji:"🌬️", tag:"", tagColor:"" },
+];
+
+// ─── APP ──────────────────────────────────────────────────────────────────────
+function App() {
+  const [screen, setScreen] = useState(S.SPLASH);
+  const [history, setHistory] = useState([]);
+  const [selPlant, setSelPlant] = useState(null);
+  const [selPost, setSelPost] = useState(null);
+  const [tab, setTab] = useState("home");
+  const [obStep, setObStep] = useState(0);
+  const [addStep, setAddStep] = useState(0);
+  const [cartCount, setCartCount] = useState(0);
+  const [myPlants, setMyPlants] = useState(INIT_PLANTS);
+  const [savedPosts, setSavedPosts] = useState([]);
+  const [waterLog, setWaterLog] = useState(WATER_LOG_INIT);
+  const [diaries, setDiaries] = useState(DIARY_INIT);
+  const [waterModal, setWaterModal] = useState(null);
+  const [diaryModal, setDiaryModal] = useState(null);
+  const [myAvatar, setMyAvatar] = useState("🧑‍🌾");
+  const [myNickname, setMyNickname] = useState("");
+  const [plantPhotos, setPlantPhotos] = useState({}); // {plantId: dataUrl}
+  const [familyMembers, setFamilyMembers] = useState(FAMILY_MEMBERS);
+  const [doneUrgent, setDoneUrgent] = useState(new Set());
+  const FC = "PLANT-7842";
+  const IL = "restinplant.app/join/7842";
+
+  useEffect(() => {
+    if (screen === S.SPLASH) { const t = setTimeout(() => setScreen(S.ONBOARDING), 2000); return () => clearTimeout(t); }
+  }, [screen]);
+
+  useEffect(() => {
+    if (diaryModal && screen === S.CALENDAR) go(S.DIARY_WRITE);
+  }, [diaryModal]);
+
+  // 탭 루트 화면들 (히스토리 스택 리셋)
+  const ROOT_SCREENS = new Set([S.HOME, S.MY_PLANTS, S.CALENDAR, S.SHOP, S.MYPAGE, S.COMMUNITY]);
+
+  const go = (sc, plant = null) => {
+    if (plant) setSelPlant(plant);
+    setHistory(prev => ROOT_SCREENS.has(sc) ? [] : [...prev, screen]);
+    setScreen(sc);
+  };
+
+  const goBack = () => {
+    if (history.length > 0) {
+      const prev = history[history.length - 1];
+      setHistory(h => h.slice(0, -1));
+      setScreen(prev);
+    } else {
+      setScreen(S.HOME);
+    }
+  };
+
+  const nav = (t) => {
+    setTab(t);
+    const m = { home:S.HOME, plants:S.MY_PLANTS, calendar:S.CALENDAR, shop:S.SHOP, mypage:S.MYPAGE, community:S.COMMUNITY };
+    setHistory([]);
+    setScreen(m[t]);
+  };
+
+  const showNav = [S.HOME,S.MY_PLANTS,S.CALENDAR,S.SHOP,S.MYPAGE,S.PLANT_DETAIL,
+    S.NOTIFICATIONS,S.FAMILY,S.JOIN_FAMILY,S.ADD_PLANT,S.DIARY_WRITE,S.CONTENT_FEED,S.CONTENT_DETAIL,S.COMMUNITY].includes(screen);
+
+  // 뒤로가기가 필요한 화면과 해당 목적지
+  const backMap = {
+    [S.PLANT_DETAIL]: ()=>go(S.MY_PLANTS),
+    [S.ADD_PLANT]:    ()=>go(S.MY_PLANTS),
+    [S.NOTIFICATIONS]:()=>go(S.HOME),
+    [S.FAMILY]:       ()=>go(S.MYPAGE),
+    [S.JOIN_FAMILY]:  ()=>go(S.MYPAGE),
+    [S.DIARY_WRITE]:  ()=>go(S.CALENDAR),
+  };
+  const backFn = backMap[screen];
+
+  // 스와이프 제스처
+  const touchStartX = useRef(null);
+  const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (dx > 60 && backFn) backFn();
+    touchStartX.current = null;
+  };
+
   return (
     <div style={{ width:"100%", height:"100%", background:"#F5F9E8", fontFamily:"'Pretendard','Noto Sans KR','Apple SD Gothic Neo',sans-serif" }}>
       <style>{`
